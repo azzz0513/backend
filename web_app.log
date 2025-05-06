@@ -1,0 +1,67 @@
+2025-04-24T10:46:38.742+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-24T10:54:29.440+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-24T10:54:46.598+0800	ERROR	controller/user.go:59	Login with invalid param	{"error": "invalid character 'u' looking for beginning of value"}
+2025-04-24T10:54:46.599+0800	INFO	logger/logger.go:81	/api/v1/login	{"status": 200, "method": "POST", "path": "/api/v1/login", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0.0005113}
+2025-04-24T10:54:46.890+0800	INFO	logger/logger.go:81	/favicon.ico	{"status": 200, "method": "GET", "path": "/favicon.ico", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0}
+2025-04-24T10:56:11.029+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-24T10:56:32.802+0800	ERROR	controller/user.go:59	Login with invalid param	{"error": "invalid character 'u' looking for beginning of value"}
+2025-04-24T10:56:32.802+0800	INFO	logger/logger.go:81	/api/v1/login	{"status": 200, "method": "POST", "path": "/api/v1/login", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0}
+2025-04-24T10:56:33.035+0800	INFO	logger/logger.go:81	/favicon.ico	{"status": 200, "method": "GET", "path": "/favicon.ico", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0}
+2025-04-24T11:02:48.005+0800	INFO	logger/logger.go:81	/api/v1/login	{"status": 200, "method": "OPTIONS", "path": "/api/v1/login", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0.000505}
+2025-04-24T11:06:35.264+0800	INFO	logger/logger.go:81	/register.html	{"status": 200, "method": "GET", "path": "/register.html", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0}
+2025-04-24T11:06:35.522+0800	INFO	logger/logger.go:81	/favicon.ico	{"status": 200, "method": "GET", "path": "/favicon.ico", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0.000594}
+2025-04-24T11:09:57.402+0800	ERROR	controller/user.go:20	SignUp with invalid param	{"error": "invalid character 'u' looking for beginning of value"}
+2025-04-24T11:09:57.402+0800	INFO	logger/logger.go:81	/api/v1/signup	{"status": 200, "method": "POST", "path": "/api/v1/signup", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0}
+2025-04-24T11:09:57.672+0800	INFO	logger/logger.go:81	/favicon.ico	{"status": 200, "method": "GET", "path": "/favicon.ico", "query": "", "ip": "::1", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0", "errors": "", "cost": 0}
+2025-04-24T11:24:19.764+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T14:59:02.806+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T14:59:49.626+0800	INFO	logger/logger.go:81	/api/v1/login	{"status": 200, "method": "POST", "path": "/api/v1/login", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0873021}
+2025-04-27T15:01:33.649+0800	DEBUG	controller/checkin.go:15	c.ShouldBindJSON(p) err	{"err": "Key: 'Checkin.list' Error:Field validation for 'list' failed on the 'required' tag"}
+2025-04-27T15:01:33.649+0800	ERROR	controller/checkin.go:16	create checkin activity failed with invalid param	{"error": "Key: 'Checkin.list' Error:Field validation for 'list' failed on the 'required' tag"}
+2025-04-27T15:01:33.649+0800	INFO	logger/logger.go:81	/api/v1/checkin	{"status": 200, "method": "POST", "path": "/api/v1/checkin", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0010502}
+2025-04-27T15:03:52.888+0800	ERROR	mysql/member_list.go:11	CreateMemberList failed	{"error": "Error 1292 (22007): Incorrect datetime value: '0000-00-00' for column 'create_time' at row 1"}
+2025-04-27T15:03:52.888+0800	ERROR	logic/member_list.go:17	mysql.CreateMemberList failed	{"error": "Error 1292 (22007): Incorrect datetime value: '0000-00-00' for column 'create_time' at row 1"}
+2025-04-27T15:03:52.888+0800	ERROR	controller/member_list.go:31	logic.CreateMemberList failed	{"error": "Error 1292 (22007): Incorrect datetime value: '0000-00-00' for column 'create_time' at row 1"}
+2025-04-27T15:03:52.888+0800	INFO	logger/logger.go:81	/api/v1/member_list	{"status": 200, "method": "POST", "path": "/api/v1/member_list", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0145323}
+2025-04-27T15:06:10.547+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T15:10:03.672+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T15:10:28.370+0800	INFO	logger/logger.go:81	/api/v1/member_list	{"status": 200, "method": "POST", "path": "/api/v1/member_list", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0365056}
+2025-04-27T15:14:12.317+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0}
+2025-04-27T15:14:26.183+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0}
+2025-04-27T15:15:45.088+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0}
+2025-04-27T15:19:27.682+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T15:19:32.511+0800	DEBUG	controller/member_list.go:44	c.ShouldBindJSON(l) err	{"err": "json: invalid use of ,string struct tag, trying to unmarshal \"8160014434832384\" into string"}
+2025-04-27T15:19:32.511+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0005051}
+2025-04-27T15:20:10.162+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T15:20:12.313+0800	DEBUG	controller/member_list.go:44	c.ShouldBindJSON(l) err	{"err": "json: invalid use of ,string struct tag, trying to unmarshal \"8160014434832384\" into string"}
+2025-04-27T15:20:12.313+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0007634}
+2025-04-27T15:22:49.848+0800	DEBUG	controller/member_list.go:44	c.ShouldBindJSON(l) err	{"err": "json: invalid use of ,string struct tag, trying to unmarshal unquoted value into string"}
+2025-04-27T15:22:49.848+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0}
+2025-04-27T15:23:09.487+0800	DEBUG	controller/member_list.go:44	c.ShouldBindJSON(l) err	{"err": "json: invalid use of ,string struct tag, trying to unmarshal \"8160014434832384\" into string"}
+2025-04-27T15:23:09.487+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0}
+2025-04-27T15:25:14.048+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T15:25:17.762+0800	DEBUG	controller/member_list.go:44	c.ShouldBindJSON(l) err	{"err": "Key: 'AddMember.list_id，string' Error:Field validation for 'list_id，string' failed on the 'required' tag"}
+2025-04-27T15:25:17.762+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0005547}
+2025-04-27T15:25:47.144+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T15:25:50.541+0800	DEBUG	logic/member_list.go:26	AddMember	{"list_id": 9530416390213632, "member_id": 8160014434832384}
+2025-04-27T15:25:50.557+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0166172}
+2025-04-27T15:27:47.827+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T15:30:23.370+0800	INFO	logger/logger.go:81	/api/v1/member_list/9530416390213632	{"status": 200, "method": "GET", "path": "/api/v1/member_list/9530416390213632", "query": "page=1&size=2", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0071713}
+2025-04-27T15:30:58.641+0800	INFO	logger/logger.go:81	/api/v1/signup	{"status": 200, "method": "POST", "path": "/api/v1/signup", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0138717}
+2025-04-27T15:31:07.527+0800	INFO	logger/logger.go:81	/api/v1/signup	{"status": 200, "method": "POST", "path": "/api/v1/signup", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.007655}
+2025-04-27T15:31:37.411+0800	DEBUG	logic/member_list.go:26	AddMember	{"list_id": 9530416390213632, "member_id": 9535576646619136}
+2025-04-27T15:31:37.416+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0051058}
+2025-04-27T15:31:49.489+0800	DEBUG	logic/member_list.go:26	AddMember	{"list_id": 9530416390213632, "member_id": 9535613913010176}
+2025-04-27T15:31:49.493+0800	INFO	logger/logger.go:81	/api/v1/add_member	{"status": 200, "method": "POST", "path": "/api/v1/add_member", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0048867}
+2025-04-27T15:31:53.471+0800	INFO	logger/logger.go:81	/api/v1/member_list/9530416390213632	{"status": 200, "method": "GET", "path": "/api/v1/member_list/9530416390213632", "query": "page=1&size=2", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0012129}
+2025-04-27T15:32:00.141+0800	INFO	logger/logger.go:81	/api/v1/member_list/9530416390213632	{"status": 200, "method": "GET", "path": "/api/v1/member_list/9530416390213632", "query": "page=1&size=2", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0016318}
+2025-04-27T15:32:14.157+0800	INFO	logger/logger.go:81	/api/v1/member_list/9530416390213632	{"status": 200, "method": "GET", "path": "/api/v1/member_list/9530416390213632", "query": "page=2&size=2", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0012532}
+2025-04-27T15:32:35.677+0800	INFO	logger/logger.go:81	/api/v1/member_list/9530416390213632	{"status": 200, "method": "GET", "path": "/api/v1/member_list/9530416390213632", "query": "page=1&size=3", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.001003}
+2025-04-27T19:52:29.274+0800	DEBUG	backend/main.go:42	logger init success
+2025-04-27T19:53:30.714+0800	INFO	logger/logger.go:81	/api/v1/login	{"status": 200, "method": "POST", "path": "/api/v1/login", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0054453}
+2025-04-27T19:54:46.361+0800	ERROR	controller/user.go:59	Login with invalid param	{"error": "Key: 'ParamLogin.username' Error:Field validation for 'username' failed on the 'required' tag"}
+2025-04-27T19:54:46.361+0800	INFO	logger/logger.go:81	/api/v1/login	{"status": 200, "method": "POST", "path": "/api/v1/login", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0005147}
+2025-04-27T19:54:52.486+0800	INFO	logger/logger.go:81	/api/v1/login	{"status": 200, "method": "POST", "path": "/api/v1/login", "query": "", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.43.3", "errors": "", "cost": 0.0020827}
+2025-05-05T17:02:20.909+0800	DEBUG	backend/main.go:42	logger init success
+2025-05-06T11:15:41.017+0800	DEBUG	backend/main.go:42	logger init success
+2025-05-06T14:57:32.427+0800	DEBUG	backend/main.go:42	logger init success

@@ -1,0 +1,50 @@
+# yaml 配置
+version: "3.8"
+
+services:
+  mysql8019:
+    container_name: mysql8019
+    image: "docker.xuanyuan.me/mysql:latest"
+    ports:
+      - "13306:3306"
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--skip-log-bin"
+    environment:
+      MYSQL_DEFAULT_CHARACTER_SET: "utf8mb4"
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "checkin"
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  redis507:
+    container_name: redis507
+    image: "docker.xuanyuan.me/redis:latest"
+    ports:
+      - "16379:6379"
+    command: redis-server --requirepass 123456
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "123456", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  web_app:
+    build: .
+    command:
+      - sh
+      - -c
+      - "/app/wait-for.sh mysql8019:3306 redis507:6379 -- /app/shit_app /app/conf/config.yaml"
+    depends_on:
+      - mysql8019
+      - redis507
+    ports:
+      - "8888:8084"
+volumes:
+  mysql_data:
