@@ -34,7 +34,7 @@ func GetCheckinDetailByID(id int64) (data *models.CheckinDetail, err error) {
 		return
 	}
 	// 根据checkin_id获取未完成打卡活动的成员
-	data.Members, err = mysql.CheckMember(id)
+	data.Count, data.Members, err = mysql.CheckMember(id)
 	if err != nil {
 		zap.L().Error("mysql.CheckMember failed", zap.Error(err))
 		return
@@ -131,6 +131,61 @@ func GetCreatedCheckinList(userID, page, size int64) (data []*models.MsgCreator,
 		checkin := &models.MsgCreator{
 			ListName:   listName,
 			CheckinMsg: checkinMsg,
+		}
+		data = append(data, checkin)
+	}
+	return
+}
+
+func GetHistoryList(userID, page, size int64) (data []*models.MsgHistory, err error) {
+	// 获取当前用户已参与的活动历史记录列表
+	checkins, err := mysql.GetHistoryList(userID, page, size)
+	if err != nil {
+		zap.L().Error("mysql.GetCheckinList failed", zap.Error(err))
+		return
+	}
+	// 整合结构体
+	for _, ck := range checkins {
+		// 根据作者id查询作者信息
+		author, err := mysql.GetUserByID(ck.AuthorID)
+		if err != nil {
+			zap.L().Error("mysql.GetUserByID failed", zap.Error(err))
+			continue
+		}
+		// 根据活动种类id查询活动种类详细信息
+		typeDetail, err := mysql.GetTypeDetailByID(ck.TypeID)
+		if err != nil {
+			zap.L().Error("mysql.GetTypeDetailByID failed", zap.Error(err))
+			continue
+		}
+		// 根据打卡方式id查询打卡方式详细信息
+		wayDetail, err := mysql.GetWayDetailByID(ck.WayID)
+		if err != nil {
+			zap.L().Error("mysql.GetWayDetailByID failed", zap.Error(err))
+			continue
+		}
+		// 根据打卡活动id和用户id获取打卡的时间
+		checkTime, err := mysql.GetCheckTime(ck.ID, userID)
+		if err != nil {
+			zap.L().Error("mysql.GetCheckTime failed", zap.Error(err))
+			continue
+		}
+		// 整合结构体
+		checkinMsg := &models.CheckinMsg{
+			CheckinID:  ck.ID,
+			Type:       typeDetail,
+			Way:        wayDetail,
+			Title:      ck.Title,
+			Content:    ck.Content,
+			CreateTime: ck.CreateTime,
+			UpdateTime: ck.UpdateTime,
+		}
+		checkin := &models.MsgHistory{
+			CheckTime: checkTime,
+			MsgParticipant: &models.MsgParticipant{
+				AuthorName: author.Username,
+				CheckinMsg: checkinMsg,
+			},
 		}
 		data = append(data, checkin)
 	}

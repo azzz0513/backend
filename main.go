@@ -19,10 +19,16 @@ import (
 	"web_app/dao/redis"
 	"web_app/logger"
 	"web_app/pkg/snowflake"
+	"web_app/pkg/statuschecker"
 	"web_app/router"
 	"web_app/settings"
 )
 
+// @title 打卡系统后端api文档
+// @version 1.0
+// @description 打卡系统后端api文档
+// @post 127.0.0.1:8084
+// @BasePath /
 func main() {
 	// 读取命令行输入的配置文件
 	//var filename string
@@ -61,9 +67,11 @@ func main() {
 		fmt.Printf("init trans failed, err:%v\n", err)
 		return
 	}
-	// 5.注册路由
+	// 5.启动协程检查打卡活动状态
+	go statuschecker.CheckStatus()
+	// 6.注册路由
 	r := router.SetUp(settings.Conf.Mode)
-	// 6.启动服务（实现优雅关机）
+	// 7.启动服务（实现优雅关机）
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", viper.GetInt("app.port")),
 		Handler: r,

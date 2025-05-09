@@ -3,13 +3,22 @@ package router
 import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	gs "github.com/swaggo/gin-swagger"
 	"net/http"
 	"time"
 	"web_app/controller"
+	_ "web_app/docs"
 	"web_app/logger"
 	"web_app/middlewares"
 )
 
+// SetUp 路由管理
+// @title 打卡系统后端api文档
+// @version 1.0
+// @description 打卡系统后端api文档
+// @post 127.0.0.1:8084
+// @BasePath /api/v1
 func SetUp(mode string) *gin.Engine {
 	if mode == gin.ReleaseMode {
 		gin.SetMode(gin.ReleaseMode) // 设置为发布模式
@@ -23,6 +32,7 @@ func SetUp(mode string) *gin.Engine {
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
+	r.GET("/swagger/*any", gs.WrapHandler(swaggerFiles.Handler))
 	//r.GET("/ping", func(c *gin.Context) {
 	//	c.String(http.StatusOK, "pong")
 	//})
@@ -38,11 +48,14 @@ func SetUp(mode string) *gin.Engine {
 
 	{
 		// 修改当前用户数据
+		v1.POST("/change_data", controller.UpdateUserHandler)
 
 		// 创建成员名单
 		v1.POST("/create_member_list", controller.CreateMemberListHandler)
 		// 往成员名单添加成员
 		v1.POST("/add_member", controller.AddMemberHandler)
+		// 从成员名单中删除成员
+		v1.POST("/delete_member", controller.DeleteMemberHandler)
 		// 查看当前用户创建的列表
 		v1.GET("/member_list", controller.GetListListHandler)
 		// 查看成员名单详情
@@ -52,14 +65,16 @@ func SetUp(mode string) *gin.Engine {
 		v1.POST("/checkin", controller.CreateCheckinHandler)
 		// 参与打卡活动
 		v1.POST("/participate/:id", controller.ParticipateHandler)
-		// 查看创建的打卡活动详情
+		// 查看统计数据（长期考勤）（可分别查看前一日，前一周，以及前一个月的数据）
+
+		// 查看创建的打卡活动详情（30天内）
 		v1.GET("/checkin/:id", controller.GetCheckinDetailHandler)
-		// 查看当前用户需要参加的打卡活动（活动未结束）
+		// 查看当前用户需要参加的打卡活动列表（活动未结束）
 		v1.GET("/checkin_list", controller.GetCheckinListHandler)
 		// 查看当前用户创建的打卡活动列表
 		v1.GET("/created_list", controller.GetCreatedCheckinListHandler)
-		// 查看已参加过的打卡活动记录
-
+		// 查看已参加过的打卡活动历史记录列表（30天内）
+		v1.GET("/history", controller.GetHistoryListHandler)
 	}
 
 	// 注册pprof相关路由

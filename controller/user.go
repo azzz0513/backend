@@ -12,6 +12,17 @@ import (
 )
 
 // SignUpHandler 处理注册请求
+// @Tags 用户管理
+// @Summary 用户注册
+// @Description 接收前端数据注册一个新用户
+// @Param request body models.ParamSignUp  true  "注册参数"
+// @Router /api/v1/signup [post]
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+// @Failure 200 {object} ResponseData "参数错误示例：{"code":1001,"msg":"请求参数错误","data":null}"
+// @Failure 200 {object} ResponseData "用户存在示例：{"code":1002,"msg":"用户名已存在","data":null}"
+// @Failure 200 {object} ResponseData "参数错误示例：{"code":1005,"msg":"服务繁忙","data":null}"
 func SignUpHandler(c *gin.Context) {
 	// 1.获取参数和参数校验
 	p := new(models.ParamSignUp)
@@ -40,8 +51,8 @@ func SignUpHandler(c *gin.Context) {
 	// 2.业务处理
 	if err := logic.SignUp(p); err != nil {
 		zap.L().Error("logic.SignUp failed", zap.Error(err))
-		if errors.Is(err, mysql.ErrorUserNotExist) {
-			ResponseError(c, CodeUserNotExist)
+		if errors.Is(err, mysql.ErrorUserExist) {
+			ResponseError(c, CodeUserExist)
 		}
 		ResponseError(c, CodeServerBusy)
 		return
@@ -51,6 +62,14 @@ func SignUpHandler(c *gin.Context) {
 }
 
 // LoginHandler 处理登录请求
+// @Tags 用户管理
+// @Summary 用户登录
+// @Description 接收前端数据注册一个新用户
+// @Param request  body models.ParamLogin  true  "登录参数"
+// @Router /api/v1/login [post]
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func LoginHandler(c *gin.Context) {
 	// 1.获取请求参数和参数校验
 	p := new(models.ParamLogin)
@@ -84,4 +103,31 @@ func LoginHandler(c *gin.Context) {
 		"user_name": user.Username,
 		"token":     user.Token,
 	})
+}
+
+// UpdateUserHandler 处理修改用户数据
+func UpdateUserHandler(c *gin.Context) {
+	// 获取请求参数
+	u := new(models.UpdateUser)
+	if err := c.ShouldBindJSON(&u); err != nil {
+		zap.L().Debug("c.ShouldBindJSON(l) err", zap.Any("err", err))
+		zap.L().Error("UpdateUser with invalid param", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 获取用户id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	u.UserID = userID
+	// 修改成员数据的具体逻辑
+	if err := logic.UpdateUser(u); err != nil {
+		zap.L().Error("logic.UpdateUser failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
 }

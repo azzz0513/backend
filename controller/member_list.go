@@ -39,7 +39,7 @@ func CreateMemberListHandler(c *gin.Context) {
 // AddMemberHandler 往成员列表添加成员的处理函数
 func AddMemberHandler(c *gin.Context) {
 	// 参数校验
-	m := new(models.AddMember)
+	m := new(models.UpdateMember)
 	if err := c.ShouldBindJSON(&m); err != nil {
 		zap.L().Debug("c.ShouldBindJSON(l) err", zap.Any("err", err))
 		errs, ok := err.(validator.ValidationErrors) // 类型断言
@@ -54,6 +54,31 @@ func AddMemberHandler(c *gin.Context) {
 	// 具体的添加用户的业务逻辑
 	if err := logic.AddMember(m); err != nil {
 		zap.L().Error("logic.AddMember failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
+}
+
+// DeleteMemberHandler 将指定成员从成员名单中删除
+func DeleteMemberHandler(c *gin.Context) {
+	// 参数校验
+	m := new(models.UpdateMember)
+	if err := c.ShouldBindJSON(&m); err != nil {
+		zap.L().Debug("c.ShouldBindJSON(l) err", zap.Any("err", err))
+		errs, ok := err.(validator.ValidationErrors) // 类型断言
+		if !ok {
+			ResponseError(c, CodeInvalidParam)
+			return
+		}
+		errData := removeTopStruct(errs.Translate(trans))
+		ResponseErrorWithMsg(c, CodeInvalidParam, errData)
+		return
+	}
+	// 具体的删除用户的业务逻辑
+	if err := logic.DeleteMember(m); err != nil {
+		zap.L().Error("logic.DeleteMember failed", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}

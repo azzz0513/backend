@@ -9,7 +9,7 @@ type Checkin struct {
 	AuthorID int64  `json:"author_id" gorm:"column:author_id"`
 	TypeID   int64  `json:"type_id" gorm:"column:type_id" binding:"required"`
 	WayID    int64  `json:"way_id" gorm:"column:way_id" binding:"required"`
-	ListID   int64  `json:"list" gorm:"column:list_id" binding:"required"`
+	ListID   int64  `json:"list_id,string" gorm:"column:list_id" binding:"required"`
 	Status   int32  `json:"status" gorm:"column:status"`
 	Title    string `json:"title" gorm:"column:title" binding:"required"`
 	Content  string `json:"content" gorm:"column:content" binding:"required"`
@@ -33,17 +33,18 @@ type Checkin struct {
 
 // CheckinDetail 打卡活动详情
 type CheckinDetail struct {
+	Count   int           `json:"count"`
 	Members []*UserDetail `json:"members"`
 	*Checkin
 }
 
 // CheckinRecord 打卡记录接口结构体
 type CheckinRecord struct {
-	CheckinID int64      `json:"checkin_id" gorm:"column:checkin_id"`
-	UserID    int64      `json:"user_id" gorm:"column:user_id"`
-	ListID    int64      `json:"list_id" gorm:"column:list_id"`
-	IsChecked int8       `json:"is_checked" gorm:"column:is_checked,default:0"`
-	CheckTime *time.Time `json:"check_time" gorm:"column:check_time"`
+	CheckinID int64     `json:"checkin_id" gorm:"column:checkin_id"`
+	UserID    int64     `json:"user_id" gorm:"column:user_id"`
+	ListID    int64     `json:"list_id" gorm:"column:list_id"`
+	IsChecked int8      `json:"is_checked" gorm:"column:is_checked"`
+	CheckTime time.Time `json:"check_time" gorm:"column:check_time"`
 }
 
 // CheckinMsg 打卡活动基础信息结构体
@@ -67,4 +68,10 @@ type MsgParticipant struct {
 type MsgCreator struct {
 	ListName string `json:"list_name"`
 	*CheckinMsg
+}
+
+// MsgHistory 参与活动历史记录信息结构体
+type MsgHistory struct {
+	CheckTime time.Time `json:"check_time"`
+	*MsgParticipant
 }

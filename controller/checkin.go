@@ -75,7 +75,7 @@ func ParticipateHandler(c *gin.Context) {
 	// 3.处理参与打卡活动
 	if err := logic.Participate(userID, checkinID); err != nil {
 		zap.L().Error("logic.Participate err", zap.Error(err))
-		ResponseError(c, CodeServerBusy)
+		ResponseError(c, CodeTimeOut)
 		return
 	}
 	// 4.返回响应
@@ -117,6 +117,27 @@ func GetCreatedCheckinListHandler(c *gin.Context) {
 	data, err := logic.GetCreatedCheckinList(userID, page, size)
 	if err != nil {
 		zap.L().Error("logic.GetCreatedCheckinList(userID, page, size) err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, data)
+}
+
+// GetHistoryListHandler 处理获取当前用户已参与过的打卡活动历史记录列表
+func GetHistoryListHandler(c *gin.Context) {
+	// 1.获取当前用户的id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	// 2.获取分页参数
+	page, size := getPageInfo(c)
+	// 3.根据用户id获取当前用户已打卡的打卡活动历史记录列表
+	data, err := logic.GetHistoryList(userID, page, size)
+	if err != nil {
+		zap.L().Error("logic.GetHistoryList(userID, page, size) err", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}

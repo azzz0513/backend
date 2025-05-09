@@ -4,14 +4,15 @@ import "time"
 
 // MemberList 定义成员列表的结构体
 type MemberList struct {
-	ID         int64     `json:"id,string" gorm:"column:list_id"`
-	AuthorID   int64     `json:"author_id" gorm:"column:author_id"`
-	ListName   string    `json:"list_name" gorm:"column:list_name" binding:"required"`
-	CreateTime time.Time `json:"create_time" gorm:"column:create_time"`
+	ID          int64     `json:"id,string" gorm:"column:list_id"`
+	AuthorID    int64     `json:"author_id" gorm:"column:author_id"`
+	MemberCount int64     `json:"member_count" gorm:"column:member_count"`
+	ListName    string    `json:"list_name" gorm:"column:list_name" binding:"required"`
+	CreateTime  time.Time `json:"create_time" gorm:"column:create_time"`
 }
 
-// AddMember 定义添加用户到用户列表的参数结构体
-type AddMember struct {
+// UpdateMember 定义修改用户列表的参数结构体
+type UpdateMember struct {
 	ListID   int64 `json:"list_id,string" gorm:"column:list_id" binding:"required"` // 列表id
 	MemberID int64 `json:"member_id,string" gorm:"column:user_id" binding:"required"`
 }

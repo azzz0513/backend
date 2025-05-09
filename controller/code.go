@@ -1,5 +1,7 @@
 package controller
 
+// ResCode 状态码类型
+// swagger:model int64
 type ResCode int64
 
 const (
@@ -12,6 +14,7 @@ const (
 	CodeNeedLogin
 	CodeInvalidToken
 	CodeNeedPassword
+	CodeTimeOut
 )
 
 var codeMsgMap = map[ResCode]string{
@@ -24,6 +27,7 @@ var codeMsgMap = map[ResCode]string{
 	CodeNeedLogin:       "需要登录",
 	CodeInvalidToken:    "无效的Token",
 	CodeNeedPassword:    "需要正确的验证码",
+	CodeTimeOut:         "活动超时或未开始",
 }
 
 func (code ResCode) Msg() string {

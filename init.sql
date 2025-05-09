@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS `checkins` (
     `way_id` bigint(20) NOT NULL COMMENT '打卡方式',
     `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '活动状态',
     `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '活动开始时间',
-    `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '活动结束结束时间',
+    `update_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '活动更新时间',
 
     -- 验证码打卡专用字段
     `password` varchar(64) COLLATE utf8mb4_general_ci COMMENT '验证码',
@@ -120,10 +120,16 @@ CREATE TABLE IF NOT EXISTS `checkins` (
         (way_id != 1) OR (  -- way_id=1是验证码签到类型
             password IS NOT NULL
         )
+    ),
+    CONSTRAINT chk_date_order CHECK (
+        start_date <= end_date
+    ),
+    CONSTRAINT chk_positive_duration CHECK (
+        duration_minutes > 0
     )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE checkin_records (
+CREATE TABLE IF NOT EXISTS `checkin_records` (
     checkin_id BIGINT(20) NOT NULL COMMENT '关联checkins.checkin_id',
     list_id BIGINT(20) NOT NULL COMMENT '关联member_list.list',
     user_id BIGINT(20) NOT NULL COMMENT '关联list_participants.user_id',
@@ -134,4 +140,19 @@ CREATE TABLE checkin_records (
     FOREIGN KEY (list_id) REFERENCES member_list(list_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES list_participants(user_id) ON DELETE CASCADE,
     INDEX idx_check_time (check_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `checkin_stats` (
+    stat_id BIGINT(20) AUTO_INCREMENT PRIMARY KEY,
+    checkin_id BIGINT(20) NOT NULL COMMENT '关联的打卡活动ID',
+    user_id BIGINT(20) NOT NULL COMMENT '用户ID',
+    period_type ENUM('day','week','month','year') NOT NULL COMMENT '统计周期类型',
+    period_start DATE NOT NULL COMMENT '统计周期开始日期',
+    period_end DATE NOT NULL COMMENT '统计周期结束日期',
+    checkin_count INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '打卡次数',
+    last_checkin_time DATETIME COMMENT '最后一次打卡时间',
+
+    UNIQUE KEY idx_unique_stat (checkin_id, user_id, period_type, period_start),
+    KEY idx_period_range (period_start, period_end),
+    FOREIGN KEY (checkin_id) REFERENCES checkins(checkin_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

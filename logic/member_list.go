@@ -22,11 +22,19 @@ func CreateMemberList(l *models.MemberList) (err error) {
 }
 
 // AddMember 添加成员
-func AddMember(m *models.AddMember) (err error) {
+func AddMember(m *models.UpdateMember) (err error) {
 	zap.L().Debug("AddMember",
 		zap.Int64("list_id", m.ListID),
 		zap.Int64("member_id", m.MemberID))
 	return mysql.AddMember(m)
+}
+
+// DeleteMember 删除成员
+func DeleteMember(m *models.UpdateMember) (err error) {
+	zap.L().Debug("DeleteMember",
+		zap.Int64("list_id", m.ListID),
+		zap.Int64("member_id", m.MemberID))
+	return mysql.DeleteMember(m)
 }
 
 // GetListList 获取当前用户创建的成员列表

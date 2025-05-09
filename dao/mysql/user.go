@@ -50,7 +50,7 @@ func encryptPassword(password string) string {
 func Login(user *models.User) (err error) {
 	oPassword := user.Password // 用户登录时输入的密码
 	// 查询用户是否存在
-	err = DB.Where("username=?", user.Username).First(&user).Error
+	err = DB.Table("users").Where("username=?", user.Username).First(&user).Error
 	if errors.Is(err, sql.ErrNoRows) {
 		return ErrorUserNotExist
 	}
@@ -72,6 +72,15 @@ func GetUserByID(uid int64) (user *models.User, err error) {
 	user = new(models.User)
 	if err = DB.Table("users").Where("user_id=?", uid).Select("user_id", "username").Scan(&user).Error; err != nil {
 		err = ErrorInvalidID
+	}
+	return
+}
+
+// UpdateUser 更新用户数据
+func UpdateUser(u *models.UpdateUser) (err error) {
+	if err = DB.Table("users").Where("id=?", u.UserID).Omit("username", "email").Updates(u).Error; err != nil {
+		zap.L().Error("update user failed", zap.Error(err))
+		return
 	}
 	return
 }

@@ -21,8 +21,7 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 
 	// 1. 创建活动主体
 	createFields := []string{
-		"checkin_id", "author_id", "type_id", "way_id",
-		"status", "title", "content", "list_id", "password",
+		"checkin_id", "author_id", "type_id", "way_id", "title", "content", "list_id", "password",
 	}
 
 	// 根据type_id判断打卡活动类型
@@ -68,7 +67,7 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 			UserID:    p.UserID,
 			ListID:    ck.ListID,
 			IsChecked: 0,
-			CheckTime: nil,
+			CheckTime: time.Now(),
 		})
 	}
 
@@ -94,7 +93,7 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 
 // GetTypeDetailByID 根据type_id获取对应的打卡活动类型信息
 func GetTypeDetailByID(typeID int64) (detail string, err error) {
-	if err = DB.Table("type").Where("type_id = ?", typeID).Select("type_name").Scan(detail).Error; err != nil {
+	if err = DB.Table("type").Where("type_id = ?", typeID).Select("type_name").Scan(&detail).Error; err != nil {
 		zap.L().Warn("查询的打卡活动类型不存在", zap.Error(err))
 		return "", err
 	}
@@ -103,9 +102,18 @@ func GetTypeDetailByID(typeID int64) (detail string, err error) {
 
 // GetWayDetailByID 根据way_id获取对应的打卡方式信息
 func GetWayDetailByID(wayID int64) (detail string, err error) {
-	if err = DB.Table("way").Where("way_id = ?", wayID).Select("way_name").Scan(detail).Error; err != nil {
+	if err = DB.Table("way").Where("way_id = ?", wayID).Select("way_name").Scan(&detail).Error; err != nil {
 		zap.L().Warn("查询的打卡方式不存在", zap.Error(err))
 		return "", err
+	}
+	return
+}
+
+// GetCheckTime 获取打卡时间
+func GetCheckTime(checkID, userID int64) (checkTime time.Time, err error) {
+	if err = DB.Table("checkin_records").Where("checkin_id = ? AND user_id = ?", checkID, userID).Select("check_time").Scan(&checkTime).Error; err != nil {
+		zap.L().Error("查询当前用户打卡时间失败", zap.Error(err))
+		return time.Time{}, err
 	}
 	return
 }
@@ -114,7 +122,7 @@ func GetWayDetailByID(wayID int64) (detail string, err error) {
 func GetCheckinMsg(id int64) (data *models.Checkin, err error) {
 	data = new(models.Checkin)
 	if err = DB.Table("checkins").
-		Where("checkin_id = ?", id).Select("author_id", "title", "content", "list_id", "type_id", "way_id", "status").
+		Where("checkin_id = ?", id).Select("author_id", "title", "content", "list_id", "type_id", "way_id", "status", "create_time", "update_time").
 		Scan(&data).Error; err != nil {
 		zap.L().Error("get checkin fail", zap.Error(err))
 		return
@@ -138,9 +146,18 @@ func GetCheckinMsg(id int64) (data *models.Checkin, err error) {
 }
 
 // CheckMember 根据活动id获取未完成打卡的用户列表
-func CheckMember(id int64) (members []*models.UserDetail, err error) {
+func CheckMember(id int64) (count int, members []*models.UserDetail, err error) {
+	// 使用事务
+	tx := DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 查询未完成的成员列表
 	members = make([]*models.UserDetail, 0)
-	query := `
+	queryUncompleted := `
         SELECT 
             u.user_id,
             u.username
@@ -153,9 +170,20 @@ func CheckMember(id int64) (members []*models.UserDetail, err error) {
         WHERE 
             c.checkin_id = ? 
             AND (cr.is_checked = 0 OR cr.is_checked IS NULL)`
-	err = DB.Raw(query, id).Scan(&members).Error
-	if err != nil {
-		zap.L().Error("get checkin fail", zap.Error(err))
+	if err = tx.Raw(queryUncompleted, id).Scan(&members).Error; err != nil {
+		zap.L().Error("获取未完成成员列表失败", zap.Error(err))
+		return
+	}
+	// 查询已完成人数
+	queryCompleted := `
+        SELECT COUNT(DISTINCT cr.user_id)
+        FROM checkins c
+        JOIN checkin_records cr ON c.checkin_id = cr.checkin_id
+        WHERE 
+            c.checkin_id = ?
+            AND cr.is_checked = 1`
+	if err = tx.Raw(queryCompleted, id).Scan(&count).Error; err != nil {
+		zap.L().Error("获取已完成成员人数失败", zap.Error(err))
 		return
 	}
 	return
@@ -171,15 +199,11 @@ func Participate(userID, checkinID int64) (err error) {
 		}
 	}()
 
-	// 1.原子性获取活动状态
+	// 1.获取活动状态
 	// 构建获取活动状态的结构体
-	var checkin struct {
-		Status    int32
-		ListID    int64
-		StartTime time.Time
-	}
+	checkin := new(models.Checkin)
 	if err = tx.Table("checkins").
-		Select("status, list_id, start_time").
+		Select("status, type_id, list_id, start_time").
 		Where("checkin_id = ?", checkinID).
 		First(&checkin).Error; err != nil {
 		tx.Rollback()
@@ -245,18 +269,28 @@ func Participate(userID, checkinID int64) (err error) {
 func GetCheckinList(userID, page, size int64) (data []*models.Checkin, err error) {
 	data = make([]*models.Checkin, 0)
 	if err = DB.Table("checkins c").
-		Select(`c.checkin_id,c.author_id,c.title,c.content,c.list_id,c.type_id,c.way_id,c.status,cr.is_checked AS user_checked`).
+		Select(`c.checkin_id,c.author_id,c.title,c.content,c.list_id,c.type_id,c.way_id,c.status,COALESCE(cr.is_checked, 0) AS user_checked`).
 		Joins(`
             INNER JOIN list_participants lp 
                 ON c.list_id = lp.list_id
             LEFT JOIN checkin_records cr 
                 ON cr.checkin_id = c.checkin_id 
                 AND cr.user_id = ?`, userID).
-		Where("lp.user_id = ? AND c.status = 1", userID).
+		Where(`
+            lp.user_id = ? 
+            AND c.status = 1
+            AND (cr.is_checked IS NULL OR cr.is_checked = 0)
+            AND (
+                (c.type_id = 1 AND NOW() BETWEEN c.start_time AND c.start_time + INTERVAL c.duration_minutes MINUTE)
+                OR
+                (c.type_id = 2 AND NOW() BETWEEN c.start_date AND c.end_date
+                        AND TIME(NOW()) < c.daily_deadline)
+            )`, userID).
+		Order("c.create_time DESC").
 		Offset(int((page - 1) * size)).
 		Limit(int(size)).
 		Scan(&data).Error; err != nil {
-		zap.L().Error("participant get checkin fail", zap.Error(err))
+		zap.L().Error("获取当前用户需要参与打卡的打卡活动列表失败", zap.Error(err))
 		return nil, err
 	}
 	return
@@ -267,11 +301,36 @@ func GetCreatedCheckinList(userID, page, size int64) (data []*models.Checkin, er
 	data = make([]*models.Checkin, 0)
 	if err = DB.Table("checkins").
 		Where("author_id = ?", userID).
-		Select("checkin_id", "author_id", "title", "content", "list_id", "type_id", "way_id", "status").
+		Select("checkin_id", "author_id", "title", "content", "list_id", "type_id", "way_id", "status", "create_time", "update_time").
 		Offset(int((page - 1) * size)).
 		Limit(int(size)).
 		Scan(&data).Error; err != nil {
 		zap.L().Error("creator get checkin fail", zap.Error(err))
+		return nil, err
+	}
+	return
+}
+
+// GetHistoryList 获取当前用户参与过的打卡活动的历史记录列表
+func GetHistoryList(userID, page, size int64) (data []*models.Checkin, err error) {
+	data = make([]*models.Checkin, 0)
+	if err = DB.Table("checkins c").
+		Select(`c.checkin_id,c.author_id,c.title,c.content,c.list_id,c.type_id,c.way_id,c.create_time,c.update_time,c.status,1 AS user_checked`).
+		Joins(`
+            INNER JOIN checkin_records cr 
+                ON cr.checkin_id = c.checkin_id 
+                AND cr.user_id = ? 
+                AND cr.is_checked = 1`, userID).
+		Joins(`
+            INNER JOIN list_participants lp 
+                ON c.list_id = lp.list_id 
+                AND lp.user_id = ?`, userID).
+		Where("c.status = 0").
+		Order("cr.check_time DESC").
+		Offset(int((page - 1) * size)).
+		Limit(int(size)).
+		Scan(&data).Error; err != nil {
+		zap.L().Error("获取当前用户的已打卡的打卡活动历史记录失败", zap.Error(err))
 		return nil, err
 	}
 	return
