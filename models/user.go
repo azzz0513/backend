@@ -16,7 +16,7 @@ type UserDetail struct {
 
 // UpdateUser 修改用户数据的结构体
 type UpdateUser struct {
-	UserID   int64  `json:"user_id" gorm:"column:user_id"`
-	UserName string `json:"user_name" gorm:"column:user_name"`
-	Email    string `json:"email" gorm:"column:email"`
+	UserID   int64  `json:"user_id" gorm:"column:user_id"`     // 用户id，无需填写
+	UserName string `json:"user_name" gorm:"column:user_name"` // 用户名，需要修改可以填写
+	Email    string `json:"email" gorm:"column:email"`         // 邮件地址，需要修改可以填写
 }

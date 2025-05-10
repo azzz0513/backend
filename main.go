@@ -28,7 +28,7 @@ import (
 // @version 1.0
 // @description 打卡系统后端api文档
 // @post 127.0.0.1:8084
-// @BasePath /
+// @BasePath /api/v1
 func main() {
 	// 读取命令行输入的配置文件
 	//var filename string

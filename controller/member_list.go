@@ -10,6 +10,15 @@ import (
 )
 
 // CreateMemberListHandler 创建成员列表的处理函数
+// @Tags 用户列表管理
+// @Summary 创建用户列表
+// @Description 接收前端数据创建用户列表
+// @Param request body models.MemberList true  "创建用户列表参数"
+// @Router /api/v1/create_member_list [post]
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func CreateMemberListHandler(c *gin.Context) {
 	// 1.获取参数及参数校验
 	l := new(models.MemberList)
@@ -37,6 +46,15 @@ func CreateMemberListHandler(c *gin.Context) {
 }
 
 // AddMemberHandler 往成员列表添加成员的处理函数
+// @Tags 用户列表管理
+// @Summary 添加用户
+// @Description 接收前端数据添加用户
+// @Param request body models.UpdateMember true  "修改用户列表参数"
+// @Router /api/v1/add_member [post]
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func AddMemberHandler(c *gin.Context) {
 	// 参数校验
 	m := new(models.UpdateMember)
@@ -62,6 +80,15 @@ func AddMemberHandler(c *gin.Context) {
 }
 
 // DeleteMemberHandler 将指定成员从成员名单中删除
+// @Tags 用户列表管理
+// @Summary 删除用户
+// @Description 接收前端数据删除用户
+// @Param request body models.UpdateMember true  "修改用户列表参数"
+// @Router /api/v1/delete_member [post]
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func DeleteMemberHandler(c *gin.Context) {
 	// 参数校验
 	m := new(models.UpdateMember)
@@ -76,7 +103,7 @@ func DeleteMemberHandler(c *gin.Context) {
 		ResponseErrorWithMsg(c, CodeInvalidParam, errData)
 		return
 	}
-	// 具体的删除用户的业务逻辑
+	// 具体地删除用户的业务逻辑
 	if err := logic.DeleteMember(m); err != nil {
 		zap.L().Error("logic.DeleteMember failed", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
@@ -87,6 +114,16 @@ func DeleteMemberHandler(c *gin.Context) {
 }
 
 // GetListListHandler 获取当前用户创建的用户列表的处理函数
+// @Tags 用户列表管理
+// @Summary 获取当前用户创建的用户列表
+// @Description 接收前端数据查找当前用户创建的用户列表
+// @Router /api/v1/member_list [get]
+// @Param page query int true "页码"
+// @Param size query int true "页面大小参数"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":[]*models.MemberList}"
 func GetListListHandler(c *gin.Context) {
 	// 1.获取用户id
 	userID, err := getCurrentUserID(c)
@@ -108,6 +145,17 @@ func GetListListHandler(c *gin.Context) {
 }
 
 // GetListDetailHandler 查看用户列表详情的处理函数
+// @Tags 用户列表管理
+// @Summary 获取当前用户列表的详情
+// @Description 接收前端数据查找当前用户列表的详情
+// @Router /api/v1/member_list/{id} [get]
+// @Param id path string true "当前列表id"
+// @Param page query int true "页码"
+// @Param size query int true "页面大小参数"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":[]*models.ListDetail}"
 func GetListDetailHandler(c *gin.Context) {
 	// 1.获取参数（从URL中获取列表的id）
 	pidStr := c.Param("id")

@@ -15,14 +15,11 @@ import (
 // @Tags 用户管理
 // @Summary 用户注册
 // @Description 接收前端数据注册一个新用户
-// @Param request body models.ParamSignUp  true  "注册参数"
+// @Param request body models.ParamSignUp  true  "注册凭证"
 // @Router /api/v1/signup [post]
 // @Accept json
 // @Produce json
 // @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
-// @Failure 200 {object} ResponseData "参数错误示例：{"code":1001,"msg":"请求参数错误","data":null}"
-// @Failure 200 {object} ResponseData "用户存在示例：{"code":1002,"msg":"用户名已存在","data":null}"
-// @Failure 200 {object} ResponseData "参数错误示例：{"code":1005,"msg":"服务繁忙","data":null}"
 func SignUpHandler(c *gin.Context) {
 	// 1.获取参数和参数校验
 	p := new(models.ParamSignUp)
@@ -64,12 +61,12 @@ func SignUpHandler(c *gin.Context) {
 // LoginHandler 处理登录请求
 // @Tags 用户管理
 // @Summary 用户登录
-// @Description 接收前端数据注册一个新用户
-// @Param request  body models.ParamLogin  true  "登录参数"
+// @Description 接收前端数据登录用户账户
+// @Param request body models.ParamLogin  true  "登录凭证"
 // @Router /api/v1/login [post]
 // @Accept json
 // @Produce json
-// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":models.LoginResponse}"
 func LoginHandler(c *gin.Context) {
 	// 1.获取请求参数和参数校验
 	p := new(models.ParamLogin)
@@ -98,14 +95,23 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// 3.返回响应
-	ResponseSuccess(c, gin.H{
-		"user_id":   fmt.Sprintf("%d", user.UserID), // id值1<<53-1，int64类型的最大值为1<<63-1
-		"user_name": user.Username,
-		"token":     user.Token,
+	ResponseSuccess(c, &models.LoginResponse{
+		UserID:   fmt.Sprintf("%d", user.UserID), // id值1<<53-1，int64类型的最大值为1<<63-1
+		UserName: user.Username,
+		Token:    user.Token,
 	})
 }
 
 // UpdateUserHandler 处理修改用户数据
+// @Tags 用户管理
+// @Summary 用户数据修改
+// @Description 接收前端数据修改用户数据
+// @Param request body models.UpdateUser  true  "用户数据修改参数"
+// @Router /api/v1/change_data [post]
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func UpdateUserHandler(c *gin.Context) {
 	// 获取请求参数
 	u := new(models.UpdateUser)

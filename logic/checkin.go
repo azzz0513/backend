@@ -22,7 +22,7 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 }
 
 // GetCheckinDetailByID 根据活动id查询活动详情数据
-func GetCheckinDetailByID(id int64) (data *models.CheckinDetail, err error) {
+func GetCheckinDetailByID(id, page, size int64) (data *models.CheckinDetail, err error) {
 	data = &models.CheckinDetail{
 		Checkin: new(models.Checkin),
 		Members: make([]*models.UserDetail, 0),
@@ -34,7 +34,7 @@ func GetCheckinDetailByID(id int64) (data *models.CheckinDetail, err error) {
 		return
 	}
 	// 根据checkin_id获取未完成打卡活动的成员
-	data.Count, data.Members, err = mysql.CheckMember(id)
+	data.Count, data.Members, err = mysql.CheckMember(id, page, size)
 	if err != nil {
 		zap.L().Error("mysql.CheckMember failed", zap.Error(err))
 		return

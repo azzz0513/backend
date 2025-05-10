@@ -14,11 +14,10 @@ import (
 )
 
 // SetUp 路由管理
-// @title 打卡系统后端api文档
-// @version 1.0
-// @description 打卡系统后端api文档
-// @post 127.0.0.1:8084
-// @BasePath /api/v1
+// @securityDefinitions.apikey  BearerAuth
+// @in header
+// @name Authorization
+// @description 格式: Bearer <access_token>
 func SetUp(mode string) *gin.Engine {
 	if mode == gin.ReleaseMode {
 		gin.SetMode(gin.ReleaseMode) // 设置为发布模式

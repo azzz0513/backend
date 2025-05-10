@@ -146,7 +146,7 @@ func GetCheckinMsg(id int64) (data *models.Checkin, err error) {
 }
 
 // CheckMember 根据活动id获取未完成打卡的用户列表
-func CheckMember(id int64) (count int, members []*models.UserDetail, err error) {
+func CheckMember(id, page, size int64) (count int, members []*models.UserDetail, err error) {
 	// 使用事务
 	tx := DB.Begin()
 	defer func() {
@@ -170,7 +170,7 @@ func CheckMember(id int64) (count int, members []*models.UserDetail, err error) 
         WHERE 
             c.checkin_id = ? 
             AND (cr.is_checked = 0 OR cr.is_checked IS NULL)`
-	if err = tx.Raw(queryUncompleted, id).Scan(&members).Error; err != nil {
+	if err = tx.Raw(queryUncompleted, id).Offset(int((page - 1) * size)).Limit(int(size)).Scan(&members).Error; err != nil {
 		zap.L().Error("获取未完成成员列表失败", zap.Error(err))
 		return
 	}
