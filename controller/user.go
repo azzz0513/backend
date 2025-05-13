@@ -66,7 +66,7 @@ func SignUpHandler(c *gin.Context) {
 // @Router /api/v1/login [post]
 // @Accept json
 // @Produce json
-// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":models.LoginResponse}"
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":string}"
 func LoginHandler(c *gin.Context) {
 	// 1.获取请求参数和参数校验
 	p := new(models.ParamLogin)
@@ -95,11 +95,7 @@ func LoginHandler(c *gin.Context) {
 	}
 
 	// 3.返回响应
-	ResponseSuccess(c, &models.LoginResponse{
-		UserID:   fmt.Sprintf("%d", user.UserID), // id值1<<53-1，int64类型的最大值为1<<63-1
-		UserName: user.Username,
-		Token:    user.Token,
-	})
+	ResponseSuccess(c, user.Token)
 }
 
 // UpdateUserHandler 处理修改用户数据

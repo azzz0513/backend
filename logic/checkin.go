@@ -137,6 +137,57 @@ func GetCreatedCheckinList(userID, page, size int64) (data []*models.MsgCreator,
 	return
 }
 
+// GetParticipateDetail 获取用户当前参与的活动的详情数据
+func GetParticipateDetail(id int64) (data *models.MsgParticipant, err error) {
+	// 获取用户当前参与的活动的详情数据
+	checkin, err := mysql.GetCheckinMsg(id)
+	if err != nil {
+		zap.L().Error("mysql.GetCheckinMsg failed", zap.Error(err))
+		return nil, err
+	}
+	// 整合结构体
+	author, err := mysql.GetUserByID(checkin.AuthorID)
+	if err != nil {
+		zap.L().Error("mysql.GetUserByID failed", zap.Error(err))
+		return nil, err
+	}
+	// 根据活动种类id查询活动种类详细信息
+	typeDetail, err := mysql.GetTypeDetailByID(checkin.TypeID)
+	if err != nil {
+		zap.L().Error("mysql.GetTypeDetailByID failed", zap.Error(err))
+		return nil, err
+	}
+	// 根据打卡方式id查询打卡方式详细信息
+	wayDetail, err := mysql.GetWayDetailByID(checkin.WayID)
+	if err != nil {
+		zap.L().Error("mysql.GetWayDetailByID failed", zap.Error(err))
+		return nil, err
+	}
+	checkinMsg := &models.CheckinMsg{
+		CheckinID:  checkin.ID,
+		Type:       typeDetail,
+		Way:        wayDetail,
+		Title:      checkin.Title,
+		Content:    checkin.Content,
+		CreateTime: checkin.CreateTime,
+		UpdateTime: checkin.UpdateTime,
+	}
+	if checkin.TypeID == 1 {
+		checkinMsg.StartTime = checkin.StartTime
+		checkinMsg.DurationMinutes = checkin.DurationMinutes
+	} else if checkin.TypeID == 2 {
+		checkinMsg.StartDate = checkin.StartDate
+		checkinMsg.EndDate = checkin.EndDate
+		checkinMsg.DailyDeadline = checkin.DailyDeadline
+	}
+	data = &models.MsgParticipant{
+		AuthorName: author.Username,
+		CheckinMsg: checkinMsg,
+	}
+	return
+}
+
+// GetHistoryList 根据用户id获取当前用户参与过的打卡活动历史记录
 func GetHistoryList(userID, page, size int64) (data []*models.MsgHistory, err error) {
 	// 获取当前用户已参与的活动历史记录列表
 	checkins, err := mysql.GetHistoryList(userID, page, size)
@@ -188,6 +239,56 @@ func GetHistoryList(userID, page, size int64) (data []*models.MsgHistory, err er
 			},
 		}
 		data = append(data, checkin)
+	}
+	return
+}
+
+// GetHistoryDetail 获取当前历史记录的详情
+func GetHistoryDetail(id int64) (data *models.MsgParticipant, err error) {
+	// 获取用户当前活动历史记录的详情数据
+	checkin, err := mysql.GetCheckinMsg(id)
+	if err != nil {
+		zap.L().Error("mysql.GetCheckinMsg failed", zap.Error(err))
+		return nil, err
+	}
+	// 整合结构体
+	author, err := mysql.GetUserByID(checkin.AuthorID)
+	if err != nil {
+		zap.L().Error("mysql.GetUserByID failed", zap.Error(err))
+		return nil, err
+	}
+	// 根据活动种类id查询活动种类详细信息
+	typeDetail, err := mysql.GetTypeDetailByID(checkin.TypeID)
+	if err != nil {
+		zap.L().Error("mysql.GetTypeDetailByID failed", zap.Error(err))
+		return nil, err
+	}
+	// 根据打卡方式id查询打卡方式详细信息
+	wayDetail, err := mysql.GetWayDetailByID(checkin.WayID)
+	if err != nil {
+		zap.L().Error("mysql.GetWayDetailByID failed", zap.Error(err))
+		return nil, err
+	}
+	checkinMsg := &models.CheckinMsg{
+		CheckinID:  checkin.ID,
+		Type:       typeDetail,
+		Way:        wayDetail,
+		Title:      checkin.Title,
+		Content:    checkin.Content,
+		CreateTime: checkin.CreateTime,
+		UpdateTime: checkin.UpdateTime,
+	}
+	if checkin.TypeID == 1 {
+		checkinMsg.StartTime = checkin.StartTime
+		checkinMsg.DurationMinutes = checkin.DurationMinutes
+	} else if checkin.TypeID == 2 {
+		checkinMsg.StartDate = checkin.StartDate
+		checkinMsg.EndDate = checkin.EndDate
+		checkinMsg.DailyDeadline = checkin.DailyDeadline
+	}
+	data = &models.MsgParticipant{
+		AuthorName: author.Username,
+		CheckinMsg: checkinMsg,
 	}
 	return
 }

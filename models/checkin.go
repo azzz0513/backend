@@ -5,14 +5,15 @@ import "time"
 // Checkin 打卡活动类型
 type Checkin struct {
 	// 基础字段
-	ID       int64  `json:"id,string" gorm:"column:checkin_id"`                      // 活动id，无需填写
-	AuthorID int64  `json:"author_id" gorm:"column:author_id"`                       // 作者id，无需填写
-	TypeID   int64  `json:"type_id" gorm:"column:type_id" binding:"required"`        // 活动类型（一次性签到/长期考勤），必填字段
-	WayID    int64  `json:"way_id" gorm:"column:way_id" binding:"required"`          // 打卡方式（验证码），必填字段
-	ListID   int64  `json:"list_id,string" gorm:"column:list_id" binding:"required"` // 用户列表id，必填字段
-	Status   int32  `json:"status" gorm:"column:status"`                             // 活动状态，无需填写，默认为有效
-	Title    string `json:"title" gorm:"column:title" binding:"required"`            // 活动标题，必填字段
-	Content  string `json:"content" gorm:"column:content" binding:"required"`        // 活动内容，必填字段
+	ID       int64  `json:"id,string" gorm:"column:checkin_id"`                   // 活动id，无需填写
+	AuthorID int64  `json:"author_id" gorm:"column:author_id"`                    // 作者id，无需填写
+	TypeID   int64  `json:"type_id" gorm:"column:type_id" binding:"required"`     // 活动类型（一次性签到/长期考勤），必填字段
+	WayID    int64  `json:"way_id" gorm:"column:way_id" binding:"required"`       // 打卡方式（验证码），必填字段
+	ListID   int64  `json:"list_id,string" gorm:"column:list_id"`                 // 用户列表id
+	ListName string `json:"list_name" gorm:"column:list_name" binding:"required"` // 用户列表名，必填字段
+	Status   int32  `json:"status" gorm:"column:status"`                          // 活动状态，无需填写，默认为有效
+	Title    string `json:"title" gorm:"column:title" binding:"required"`         // 活动标题，必填字段
+	Content  string `json:"content" gorm:"column:content" binding:"required"`     // 活动内容，必填字段
 
 	// 时间字段
 	CreateTime time.Time `json:"create_time" gorm:"column:create_time"` // 活动创建时间，无需填写
@@ -56,6 +57,15 @@ type CheckinMsg struct {
 	Content    string    `json:"content"`     // 打卡活动内容
 	CreateTime time.Time `json:"create_time"` // 打卡活动创建时间
 	UpdateTime time.Time `json:"update_time"` // 打卡活动更新时间
+
+	// 长期考勤字段
+	StartDate     time.Time `json:"start_date" gorm:"column:start_date"`         // 活动开始日期
+	EndDate       time.Time `json:"end_date" gorm:"column:end_date"`             // 活动结束日期
+	DailyDeadline string    `json:"daily_deadline" gorm:"column:daily_deadline"` // 每日打卡时限
+
+	// 一次性签到字段
+	StartTime       time.Time `json:"start_time" gorm:"column:start_time"`             // 活动开始时间
+	DurationMinutes uint      `json:"duration_minutes" gorm:"column:duration_minutes"` // 打卡活动持续时间，分钟数
 }
 
 // MsgParticipant 活动参与者获取的打卡活动信息结构体

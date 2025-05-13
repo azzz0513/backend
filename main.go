@@ -29,6 +29,10 @@ import (
 // @description 打卡系统后端api文档
 // @post 127.0.0.1:8084
 // @BasePath /api/v1
+// @securityDefinitions.apikey  BearerAuth
+// @in header
+// @name Authorization
+// @description 格式: Bearer <string>
 func main() {
 	// 读取命令行输入的配置文件
 	//var filename string

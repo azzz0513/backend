@@ -19,10 +19,3 @@ type ParamLogin struct {
 	Username string `json:"username" binding:"required"` // 用户名，必填字段
 	Password string `json:"password" binding:"required"` // 用户密码，必填字段
 }
-
-// LoginResponse 登录响应数据
-type LoginResponse struct {
-	Token    string `json:"token"`
-	UserID   string `json:"user_id"`
-	UserName string `json:"user_name"`
-}

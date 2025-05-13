@@ -78,6 +78,36 @@ func GetCheckinDetailHandler(c *gin.Context) {
 	ResponseSuccess(c, data)
 }
 
+// GetParticipateDetailHandler 处理获取用户当前参与的活动的详情
+// @Tags 打卡活动管理
+// @Summary 获取用户当前参与的活动的详情
+// @Description 获取当前打卡活动的详情并发送到前端
+// @Router /api/v1/participate_detail/{id} [get]
+// @Param id path string true "活动ID"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":models.MsgParticipant}"
+func GetParticipateDetailHandler(c *gin.Context) {
+	// 1.获取参数（从URL中获取当前打卡活动的id）
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("logic.GetParticipateDetailHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 2.根据id取出打卡活动当前的活动详情
+	data, err := logic.GetParticipateDetail(id)
+	if err != nil {
+		zap.L().Error("logic.GetParticipateDetailByID(id) err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 3.返回响应
+	ResponseSuccess(c, data)
+}
+
 // ParticipateHandler 处理参与打卡活动
 // @Tags 打卡活动管理
 // @Summary 参与打卡活动
@@ -203,5 +233,35 @@ func GetHistoryListHandler(c *gin.Context) {
 		return
 	}
 	// 返回响应
+	ResponseSuccess(c, data)
+}
+
+// GetHistoryDetailHandler 处理获取用户当前参与的活动的详情
+// @Tags 打卡活动管理
+// @Summary 获取用户参与的活动历史记录的详情
+// @Description 获取当前历史记录活动的详情并发送到前端
+// @Router /api/v1/history/{id} [get]
+// @Param id path string true "活动ID"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":models.MsgParticipant}"
+func GetHistoryDetailHandler(c *gin.Context) {
+	// 1.获取参数（从URL中获取当前打卡活动的id）
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("logic.GetHistoryDetailHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 2.根据id取出打卡活动当前的活动详情
+	data, err := logic.GetHistoryDetail(id)
+	if err != nil {
+		zap.L().Error("logic.GetHistoryDetailByID(id) err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 3.返回响应
 	ResponseSuccess(c, data)
 }

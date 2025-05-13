@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -14,15 +15,20 @@ import (
 )
 
 // SetUp 路由管理
-// @securityDefinitions.apikey  BearerAuth
-// @in header
-// @name Authorization
-// @description 格式: Bearer <access_token>
 func SetUp(mode string) *gin.Engine {
 	if mode == gin.ReleaseMode {
 		gin.SetMode(gin.ReleaseMode) // 设置为发布模式
 	}
 	r := gin.New()
+	// 配置 CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://127.0.0.1:5500"}, // 前端地址
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	// 使用中间件
 	r.Use(logger.GinLogger(), logger.GinRecovery(true), middlewares.RateLimitMiddleware(2*time.Second, 1000))
 
@@ -64,8 +70,10 @@ func SetUp(mode string) *gin.Engine {
 		v1.POST("/checkin", controller.CreateCheckinHandler)
 		// 参与打卡活动
 		v1.POST("/participate/:id", controller.ParticipateHandler)
+		// 获取用户当前参与的活动的详情数据
+		v1.GET("/participate_detail/:id", controller.GetParticipateDetailHandler)
 		// 查看统计数据（长期考勤）（可分别查看前一日，前一周，以及前一个月的数据）
-
+		//v1.GET("/statistics/:id", controller.GetStatisticsHandler)
 		// 查看创建的打卡活动详情（30天内）
 		v1.GET("/checkin/:id", controller.GetCheckinDetailHandler)
 		// 查看当前用户需要参加的打卡活动列表（活动未结束）
@@ -74,6 +82,8 @@ func SetUp(mode string) *gin.Engine {
 		v1.GET("/created_list", controller.GetCreatedCheckinListHandler)
 		// 查看已参加过的打卡活动历史记录列表（30天内）
 		v1.GET("/history", controller.GetHistoryListHandler)
+		// 查克拉已参与过的打卡活动历史记录详情
+		v1.GET("/history/:id", controller.GetHistoryDetailHandler)
 	}
 
 	// 注册pprof相关路由

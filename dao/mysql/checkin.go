@@ -23,7 +23,12 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 	createFields := []string{
 		"checkin_id", "author_id", "type_id", "way_id", "title", "content", "list_id", "password",
 	}
-
+	// 根据list_name获取list_id
+	if err = tx.Table("member_list").Where("list_name = ? AND author_id = ?", ck.ListName, ck.AuthorID).Select("list_id").Scan(&ck.ListID).Error; err != nil {
+		tx.Rollback()
+		zap.L().Error("获取列表id失败", zap.Error(err))
+		return
+	}
 	// 根据type_id判断打卡活动类型
 	// 根据类型添加专属字段
 	switch ck.TypeID {
@@ -48,7 +53,7 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 	var participantIDs []struct {
 		UserID int64 `gorm:"column:user_id"`
 	}
-	if err := tx.Table("list_participants").
+	if err = tx.Table("list_participants").
 		Select("user_id").
 		Where("list_id = ?", ck.ListID).
 		Find(&participantIDs).Error; err != nil {
@@ -122,25 +127,10 @@ func GetCheckTime(checkID, userID int64) (checkTime time.Time, err error) {
 func GetCheckinMsg(id int64) (data *models.Checkin, err error) {
 	data = new(models.Checkin)
 	if err = DB.Table("checkins").
-		Where("checkin_id = ?", id).Select("author_id", "title", "content", "list_id", "type_id", "way_id", "status", "create_time", "update_time").
+		Where("checkin_id = ?", id).Select("checkin_id", "author_id", "title", "content", "list_id", "type_id", "way_id", "status", "create_time", "update_time", "start_time", "duration_minutes", "end_date", "start_date", "daily_deadline").
 		Scan(&data).Error; err != nil {
 		zap.L().Error("get checkin fail", zap.Error(err))
 		return
-	}
-	if data.Status != 0 {
-		if data.TypeID == 1 {
-			// 当前打卡活动为一次性打卡活动
-			if err = DB.Table("checkins").Where("checkin_id = ?", id).Select("start_time", "duration_minutes").Scan(&data).Error; err != nil {
-				zap.L().Error("get checkin fail", zap.Error(err))
-				return
-			}
-		} else if data.TypeID == 2 {
-			// 当前打卡活动为长期考勤活动
-			if err = DB.Table("checkins").Where("checkin_id = ?", id).Select("end_time", "start_time", "daily_deadline").Scan(&data).Error; err != nil {
-				zap.L().Error("get checkin fail", zap.Error(err))
-				return
-			}
-		}
 	}
 	return
 }
@@ -269,7 +259,7 @@ func Participate(userID, checkinID int64) (err error) {
 func GetCheckinList(userID, page, size int64) (data []*models.Checkin, err error) {
 	data = make([]*models.Checkin, 0)
 	if err = DB.Table("checkins c").
-		Select(`c.checkin_id,c.author_id,c.title,c.content,c.list_id,c.type_id,c.way_id,c.status,COALESCE(cr.is_checked, 0) AS user_checked`).
+		Select(`c.checkin_id,c.author_id,c.title,c.content,c.list_id,c.type_id,c.way_id,c.status,c.create_time,c.update_time,COALESCE(cr.is_checked, 0) AS user_checked`).
 		Joins(`
             INNER JOIN list_participants lp 
                 ON c.list_id = lp.list_id
@@ -319,8 +309,7 @@ func GetHistoryList(userID, page, size int64) (data []*models.Checkin, err error
 		Joins(`
             INNER JOIN checkin_records cr 
                 ON cr.checkin_id = c.checkin_id 
-                AND cr.user_id = ? 
-                AND cr.is_checked = 1`, userID).
+                AND cr.user_id = ?`, userID).
 		Joins(`
             INNER JOIN list_participants lp 
                 ON c.list_id = lp.list_id 
