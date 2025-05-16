@@ -84,3 +84,45 @@ func UpdateUser(u *models.UpdateUser) (err error) {
 	}
 	return
 }
+
+// ChangePassword 修改用户密码
+func ChangePassword(u *models.ChangePassword) (err error) {
+	// 使用事务
+	tx := DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 检验用户旧密码是否正确
+	oPassword := u.OldPassword
+	var storedPassword string
+	if err = tx.Table("users").Where("user_id=?", u.UserID).Select("password").Scan(&storedPassword).Error; err != nil {
+		tx.Rollback()
+		zap.L().Error("get user password failed", zap.Error(err))
+		return
+	}
+	password := encryptPassword(oPassword)
+	if password != storedPassword {
+		tx.Rollback()
+		return ErrorInvalidPassword
+	}
+
+	// 修改用户密码
+	newPassword := encryptPassword(u.NewPassword)
+	if err = tx.Table("users").Where("user_id=?", u.UserID).Select("password").Update("password", newPassword).Error; err != nil {
+		tx.Rollback()
+		zap.L().Error("update user password failed", zap.Error(err))
+		return
+	}
+
+	// 提交事务
+	if err = tx.Commit().Error; err != nil {
+		zap.L().Error("事务提交失败",
+			zap.Int64("user_id", u.UserID),
+			zap.Error(err))
+		return
+	}
+	return
+}

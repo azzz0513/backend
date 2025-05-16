@@ -54,6 +54,8 @@ func SetUp(mode string) *gin.Engine {
 	{
 		// 修改当前用户数据
 		v1.POST("/change_data", controller.UpdateUserHandler)
+		// 修改用户密码
+		v1.POST("/change_password", controller.ChangePasswordHandler)
 
 		// 创建成员名单
 		v1.POST("/create_member_list", controller.CreateMemberListHandler)
@@ -65,6 +67,9 @@ func SetUp(mode string) *gin.Engine {
 		v1.GET("/member_list", controller.GetListListHandler)
 		// 查看成员名单详情
 		v1.GET("/member_list/:id", controller.GetListDetailHandler)
+
+		// 发送邮件邀请
+		//v1.POST("/email", controller.SendEmailHandler)
 
 		// 发布打卡活动
 		v1.POST("/checkin", controller.CreateCheckinHandler)
@@ -82,7 +87,7 @@ func SetUp(mode string) *gin.Engine {
 		v1.GET("/created_list", controller.GetCreatedCheckinListHandler)
 		// 查看已参加过的打卡活动历史记录列表（30天内）
 		v1.GET("/history", controller.GetHistoryListHandler)
-		// 查克拉已参与过的打卡活动历史记录详情
+		// 查看已参与过的打卡活动历史记录详情
 		v1.GET("/history/:id", controller.GetHistoryDetailHandler)
 	}
 

@@ -161,6 +161,7 @@ func CheckMember(id, page, size int64) (count int, members []*models.UserDetail,
             c.checkin_id = ? 
             AND (cr.is_checked = 0 OR cr.is_checked IS NULL)`
 	if err = tx.Raw(queryUncompleted, id).Offset(int((page - 1) * size)).Limit(int(size)).Scan(&members).Error; err != nil {
+		tx.Rollback()
 		zap.L().Error("获取未完成成员列表失败", zap.Error(err))
 		return
 	}
@@ -173,9 +174,19 @@ func CheckMember(id, page, size int64) (count int, members []*models.UserDetail,
             c.checkin_id = ?
             AND cr.is_checked = 1`
 	if err = tx.Raw(queryCompleted, id).Scan(&count).Error; err != nil {
+		tx.Rollback()
 		zap.L().Error("获取已完成成员人数失败", zap.Error(err))
 		return
 	}
+
+	// 提交事务
+	if err = tx.Commit().Error; err != nil {
+		zap.L().Error("事务提交失败",
+			zap.Int64("checkin_id", id),
+			zap.Error(err))
+		return
+	}
+
 	return
 }
 

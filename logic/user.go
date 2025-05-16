@@ -53,3 +53,11 @@ func UpdateUser(u *models.UpdateUser) (err error) {
 	}
 	return mysql.UpdateUser(u)
 }
+
+// ChangePassword 修改用户密码
+func ChangePassword(u *models.ChangePassword) (err error) {
+	if err = mysql.ChangePassword(u); err != nil {
+		return
+	}
+	return
+}

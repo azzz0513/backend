@@ -2,11 +2,6 @@ package models
 
 // 定义请求的参数结构体
 
-const (
-	OrderTime  = "time"
-	OrderScore = "score"
-)
-
 // ParamSignUp 定义注册请求的参数结构体
 type ParamSignUp struct {
 	Username   string `json:"username" binding:"required"`                     // 用户名，必填字段

@@ -133,3 +133,39 @@ func UpdateUserHandler(c *gin.Context) {
 	// 返回响应
 	ResponseSuccess(c, nil)
 }
+
+// ChangePasswordHandler 处理修改用户密码
+// @Tags 用户管理
+// @Summary 用户密码修改
+// @Description 接收前端数据修改用户密码
+// @Param request body models.ChangePassword  true  "用户密码修改参数"
+// @Router /api/v1/change_password [post]
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+func ChangePasswordHandler(c *gin.Context) {
+	// 获取请求参数
+	u := new(models.ChangePassword)
+	if err := c.ShouldBindJSON(&u); err != nil {
+		zap.L().Debug("c.ShouldBindJSON(l) err", zap.Any("err", err))
+		zap.L().Error("ChangePassword with invalid param", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 获取用户id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	u.UserID = userID
+	// 修改用户密码的具体逻辑
+	if err := logic.ChangePassword(u); err != nil {
+		zap.L().Error("logic.ChangePassword failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
+}
