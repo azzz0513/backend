@@ -6,9 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
+	"strconv"
 	"web_app/dao/mysql"
 	"web_app/logic"
 	"web_app/models"
+	"web_app/pkg/jwt"
 )
 
 // SignUpHandler 处理注册请求
@@ -98,6 +100,36 @@ func LoginHandler(c *gin.Context) {
 	ResponseSuccess(c, user.Token)
 }
 
+// GetUserDetailHandler 处理获取用户详情
+// @Tags 用户管理
+// @Summary 获取用户详情数据
+// @Description 获取用户详情数据并发送到前端
+// @Router /api/v1/user_detail/{id} [get]
+// @Param id path string true "用户ID"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+func GetUserDetailHandler(c *gin.Context) {
+	// 获取参数（从URL中获取用户id）
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("Get user id from param failed", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 根据用户id获取用户详情
+	data, err := logic.GetUserDetail(id)
+	if err != nil {
+		zap.L().Error("logic.GetUserDetail failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, data)
+}
+
 // UpdateUserHandler 处理修改用户数据
 // @Tags 用户管理
 // @Summary 用户数据修改
@@ -107,7 +139,7 @@ func LoginHandler(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":models.UserDetail}"
 func UpdateUserHandler(c *gin.Context) {
 	// 获取请求参数
 	u := new(models.UpdateUser)
@@ -163,6 +195,66 @@ func ChangePasswordHandler(c *gin.Context) {
 	// 修改用户密码的具体逻辑
 	if err := logic.ChangePassword(u); err != nil {
 		zap.L().Error("logic.ChangePassword failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
+}
+
+// FindPasswordHandler 处理找回用户密码
+// @Tags 用户管理
+// @Summary 用户密码找回
+// @Description 接收前端数据找回用户密码
+// @Param request body models.FindPassword  true  "用户密码修改参数"
+// @Router /api/v1/find_password [post]
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+func FindPasswordHandler(c *gin.Context) {
+	// 获取请求参数
+	e := new(models.FindPassword)
+	if err := c.ShouldBindJSON(&e); err != nil {
+		zap.L().Error("FindPassword with invalid param", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 处理验证邮箱是否存在以及发送确认邮件的具体逻辑
+	if err := logic.FindPassword(e); err != nil {
+		zap.L().Error("logic.FindPassword failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
+}
+
+// ResetPasswordHandler 处理重置密码请求
+func ResetPasswordHandler(c *gin.Context) {
+	// 获取请求参数
+	u := new(models.ResetPassword)
+	if err := c.ShouldBindJSON(&u); err != nil {
+		zap.L().Error("ResetPassword with invalid param", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+
+	// 验证Token
+	token := c.Query("token")
+	if token == "" {
+		zap.L().Error("token失效")
+		ResponseError(c, CodeInvalidToken)
+		return
+	}
+	if _, err := jwt.ParseToken(token); err != nil {
+		zap.L().Error("token已经过期或无效", zap.Error(err))
+		ResponseError(c, CodeInvalidToken)
+		return
+	}
+
+	// 处理重置密码的具体逻辑
+	if err := logic.ResetPassword(u); err != nil {
+		zap.L().Error("logic.ResetPassword failed", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}

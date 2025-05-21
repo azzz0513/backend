@@ -96,6 +96,15 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 	return
 }
 
+// DeleteCheckin 根据checkin_id删除指定的打卡活动id
+func DeleteCheckin(checkinID int64) (err error) {
+	if err = DB.Table("checkins").Unscoped().Where("checkin_id = ?", checkinID).Delete(nil).Error; err != nil {
+		zap.L().Error("删除打卡活动失败", zap.Error(err))
+		return
+	}
+	return
+}
+
 // GetTypeDetailByID 根据type_id获取对应的打卡活动类型信息
 func GetTypeDetailByID(typeID int64) (detail string, err error) {
 	if err = DB.Table("type").Where("type_id = ?", typeID).Select("type_name").Scan(&detail).Error; err != nil {
@@ -136,7 +145,7 @@ func GetCheckinMsg(id int64) (data *models.Checkin, err error) {
 }
 
 // CheckMember 根据活动id获取未完成打卡的用户列表
-func CheckMember(id, page, size int64) (count int, members []*models.UserDetail, err error) {
+func CheckMember(id, page, size int64) (count int, members []*models.UserEasyDetail, err error) {
 	// 使用事务
 	tx := DB.Begin()
 	defer func() {
@@ -146,7 +155,7 @@ func CheckMember(id, page, size int64) (count int, members []*models.UserDetail,
 	}()
 
 	// 查询未完成的成员列表
-	members = make([]*models.UserDetail, 0)
+	members = make([]*models.UserEasyDetail, 0)
 	queryUncompleted := `
         SELECT 
             u.user_id,

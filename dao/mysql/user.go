@@ -28,14 +28,26 @@ func CheckUserExist(username string) (err error) {
 	return
 }
 
+// CheckEmailExist 检查指定用户有限的用户是否存在
+func CheckEmailExist(email string) (err error) {
+	var count int
+	if err := DB.Raw("select count(user_id) from users where email = ?", email).Scan(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return ErrorUserExist
+	}
+	return
+}
+
 // InsertUser 向数据库中插入一条新的用户记录
 func InsertUser(user *models.User) (err error) {
 	// 对密码进行加密
 	oPassword := user.Password
 	user.Password = encryptPassword(oPassword)
 	// 执行SQL语句入库
-	sqlStr := `insert into users (user_id,username,password) values (?,?,?)`
-	err = DB.Exec(sqlStr, user.UserID, user.Username, user.Password).Error
+	sqlStr := `insert into users (user_id,username,password,email) values (?,?,?,?)`
+	err = DB.Exec(sqlStr, user.UserID, user.Username, user.Password, user.Email).Error
 	return
 }
 
@@ -72,6 +84,17 @@ func GetUserByID(uid int64) (user *models.User, err error) {
 	user = new(models.User)
 	if err = DB.Table("users").Where("user_id=?", uid).Select("user_id", "username").Scan(&user).Error; err != nil {
 		err = ErrorInvalidID
+	}
+	return
+}
+
+// GetUserDetail 获取用户详情数据
+func GetUserDetail(userID int64) (user *models.UserDetail, err error) {
+	user = new(models.UserDetail)
+	if err = DB.Table("users").Where("user_id=?", userID).Select("user_id", "username", "email").Scan(&user).Error; err != nil {
+		zap.L().Error("get user detail failed", zap.Error(err))
+		err = ErrorInvalidID
+		return nil, err
 	}
 	return
 }
@@ -122,6 +145,25 @@ func ChangePassword(u *models.ChangePassword) (err error) {
 		zap.L().Error("事务提交失败",
 			zap.Int64("user_id", u.UserID),
 			zap.Error(err))
+		return
+	}
+	return
+}
+
+// CheckEmail 检查当前邮箱是否有对应用户并返回
+func CheckEmail(email string) (user *models.User, err error) {
+	if err = DB.Table("users").Where("email=?", email).First(&user).Error; err != nil {
+		zap.L().Error("check email failed", zap.Error(err))
+		return nil, ErrorUserNotExist
+	}
+	return
+}
+
+// ResetPassword 重置用户密码
+func ResetPassword(u *models.ResetPassword) (err error) {
+	newPassword := encryptPassword(u.Password)
+	if err = DB.Table("users").Where("username = ?", u.UserName).Update("password", newPassword).Error; err != nil {
+		zap.L().Error("reset password failed", zap.Error(err))
 		return
 	}
 	return

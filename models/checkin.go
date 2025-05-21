@@ -34,9 +34,27 @@ type Checkin struct {
 
 // CheckinDetail 打卡活动详情
 type CheckinDetail struct {
-	Count    int           `json:"count"`   // 已完成人员数
-	Members  []*UserDetail `json:"members"` // 未完成人员列表
-	*Checkin               // 内嵌活动结构体
+	Count    int               `json:"count"`   // 已完成人员数
+	Members  []*UserEasyDetail `json:"members"` // 未完成人员列表
+	*Checkin                   // 内嵌活动结构体
+}
+
+//type CheckinDetail2 struct {
+//	CheckedCount int  `json:"checked_count"` // 已完成人数
+//	UnCheckedCount int  `json:"un_checked_count"` // 未完成人数
+//	CheckedMembers []*UserEasyDetail `json:"checked_members"` // 已完成成员列表
+//	UnCheckedMembers []*UserEasyDetail `json:"un_checked_members"` // 未完成成员列表
+//	*Checkin // 内嵌活动结构体
+//}
+
+// Statistics 长期考勤活动统计数据结构体
+type Statistics struct {
+	UserID       int64     `json:"user_id" gorm:"column:user_id"`              // 用户id
+	DailyCount   int       `json:"daily_count" gorm:"column:checkin_count"`    // 用户日打卡数
+	WeeklyCount  int       `json:"weekly_count" gorm:"column:checkin_count"`   // 用户周打卡数
+	MonthlyCount int       `json:"monthly_count" gorm:"column:checkin_count"`  // 用户月打卡数
+	UserName     string    `json:"user_name" gorm:"column:user_name"`          // 用户名称
+	CheckTime    time.Time `json:"check_time" gorm:"column:last_checkin_time"` // 用户最近打卡时间
 }
 
 // CheckinRecord 打卡记录接口结构体

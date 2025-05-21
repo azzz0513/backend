@@ -22,7 +22,7 @@ func SetUp(mode string) *gin.Engine {
 	r := gin.New()
 	// 配置 CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://127.0.0.1:5500"}, // 前端地址
+		AllowOrigins:     []string{"http://127.0.0.1:8087", "http://localhost:8087", "http://3.138.230.142:8087"}, // 前端地址
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -44,9 +44,12 @@ func SetUp(mode string) *gin.Engine {
 	v1 := r.Group("/api/v1")
 	// 注册业务路由
 	v1.POST("/signup", controller.SignUpHandler)
-
 	// 登录业务路由
 	v1.POST("/login", controller.LoginHandler)
+	// 用户密码找回
+	v1.POST("/find_password", controller.FindPasswordHandler)
+	// 处理重置密码
+	v1.POST("/reset_password", controller.ResetPasswordHandler)
 
 	// 应用JWT认证中间件，需要登录后使用的业务放到这个中间件后面
 	v1.Use(middlewares.JWTAuthMiddleware())
@@ -56,6 +59,8 @@ func SetUp(mode string) *gin.Engine {
 		v1.POST("/change_data", controller.UpdateUserHandler)
 		// 修改用户密码
 		v1.POST("/change_password", controller.ChangePasswordHandler)
+		// 获取用户详情
+		v1.GET("/user_detail/:id", controller.GetUserDetailHandler)
 
 		// 创建成员名单
 		v1.POST("/create_member_list", controller.CreateMemberListHandler)
@@ -67,14 +72,15 @@ func SetUp(mode string) *gin.Engine {
 		v1.GET("/member_list", controller.GetListListHandler)
 		// 查看成员名单详情
 		v1.GET("/member_list/:id", controller.GetListDetailHandler)
-
-		// 发送邮件邀请
-		//v1.POST("/email", controller.SendEmailHandler)
+		// 用户主动加入成员名单
+		v1.POST("/join/:id", controller.JoinMemberListHandler)
 
 		// 发布打卡活动
 		v1.POST("/checkin", controller.CreateCheckinHandler)
 		// 参与打卡活动
 		v1.POST("/participate/:id", controller.ParticipateHandler)
+		// 删除打卡活动
+		v1.POST("/delete_checkin/:id", controller.DeleteCheckinHandler)
 		// 获取用户当前参与的活动的详情数据
 		v1.GET("/participate_detail/:id", controller.GetParticipateDetailHandler)
 		// 查看统计数据（长期考勤）（可分别查看前一日，前一周，以及前一个月的数据）
@@ -89,6 +95,9 @@ func SetUp(mode string) *gin.Engine {
 		v1.GET("/history", controller.GetHistoryListHandler)
 		// 查看已参与过的打卡活动历史记录详情
 		v1.GET("/history/:id", controller.GetHistoryDetailHandler)
+
+		// 测试：生成二维码
+		v1.GET("/qrcode/:id", controller.QRCodeHandler)
 	}
 
 	// 注册pprof相关路由

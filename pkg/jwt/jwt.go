@@ -20,6 +20,12 @@ type MyClaims struct {
 	jwt.StandardClaims
 }
 
+type CheckinClaims struct {
+	UserID    int64 `json:"user_id"`
+	CheckinID int64 `json:"checkin_id"`
+	jwt.StandardClaims
+}
+
 // GenToken 生成access token和refresh token
 func GenToken(userID int64) (string, error) {
 	// 创建一个我们自己的声明
@@ -33,6 +39,21 @@ func GenToken(userID int64) (string, error) {
 	// 使用指定的签名方法创建签名对象
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	// 使用指定的secret签名并获得完整的编码后的字符串token
+	return token.SignedString(mySecret)
+}
+
+func GenCheckinToken(userID, checkinID int64) (string, error) {
+	// 创建声明
+	c := CheckinClaims{
+		UserID:    userID,
+		CheckinID: checkinID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(viper.GetDuration("auth.jwt_expire") * time.Hour).Unix(), // 过期时间
+			Issuer:    "shit",                                                                  // 签发人
+		},
+	}
+	// 使用指定的签名方法创建签名对象
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 	return token.SignedString(mySecret)
 }
 

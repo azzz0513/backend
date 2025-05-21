@@ -44,6 +44,34 @@ func CreateCheckinHandler(c *gin.Context) {
 	ResponseSuccess(c, nil)
 }
 
+// DeleteCheckinHandler 处理打卡活动删除
+// @Tags 打卡活动管理
+// @Summary 删除打卡活动
+// @Description 接收前端数据删除指定的打卡活动
+// @Router /api/v1/delete_checkin/{id} [post]
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+func DeleteCheckinHandler(c *gin.Context) {
+	// 1.获取参数（从URL中获取当前打卡活动的id）
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("controller.DeleteCheckinHandler failed", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 2.处理打卡活动删除的具体逻辑
+	if err := logic.DeleteCheckin(id); err != nil {
+		zap.L().Error("logic.DeleteCheckin failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
+}
+
 // GetCheckinDetailHandler 处理获取当前打卡活动的详情
 // @Tags 打卡活动管理
 // @Summary 获取当前打卡活动的详情（已打卡人数以及未打卡人员名单）
@@ -61,7 +89,7 @@ func GetCheckinDetailHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		zap.L().Error("logic.GetCheckinDetailHandler err", zap.Error(err))
+		zap.L().Error("controller.GetCheckinDetailHandler err", zap.Error(err))
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -93,7 +121,7 @@ func GetParticipateDetailHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		zap.L().Error("logic.GetParticipateDetailHandler err", zap.Error(err))
+		zap.L().Error("controller.GetParticipateDetailHandler err", zap.Error(err))
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -123,7 +151,7 @@ func ParticipateHandler(c *gin.Context) {
 	checkinIDStr := c.Param("id")
 	checkinID, err := strconv.ParseInt(checkinIDStr, 10, 64)
 	if err != nil {
-		zap.L().Error("logic.ParticipateHandler err", zap.Error(err))
+		zap.L().Error("controller.ParticipateHandler err", zap.Error(err))
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -251,7 +279,7 @@ func GetHistoryDetailHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		zap.L().Error("logic.GetHistoryDetailHandler err", zap.Error(err))
+		zap.L().Error("controller.GetHistoryDetailHandler err", zap.Error(err))
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
@@ -264,4 +292,51 @@ func GetHistoryDetailHandler(c *gin.Context) {
 	}
 	// 3.返回响应
 	ResponseSuccess(c, data)
+}
+
+// GetStatisticsHandler 处理获取用户创建的长期考勤活动的数据
+//func GetStatisticsHandler(c *gin.Context) {
+//	// 获取参数（从URL中获取当前打卡活动的id）
+//	idStr := c.Param("id")
+//	id, err := strconv.ParseInt(idStr, 10, 64)
+//	if err != nil {
+//		zap.L().Error("controller.GetStatisticsHandler err", zap.Error(err))
+//		ResponseError(c, CodeInvalidParam)
+//		return
+//	}
+//	// 根据id取出打卡活动的数据统计
+//	data, err := logic.GetStatistics(id)
+//	if err != nil {
+//		zap.L().Error("logic.GetStatistics err", zap.Error(err))
+//		ResponseError(c, CodeServerBusy)
+//		return
+//	}
+//	// 返回响应
+//	ResponseSuccess(c, data)
+//}
+
+func QRCodeHandler(c *gin.Context) {
+	// 获取请求参数
+	idStr := c.Param("id")
+	checkinID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("controller.QRCodeHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 获取当前用户id
+	userId, err := getCurrentUserID(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	// 处理生成二维码的具体逻辑
+	qrBytes, err := logic.QRCode(userId, checkinID)
+	if err != nil {
+		zap.L().Error("logic.QRCode err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	c.Data(200, "image/png", qrBytes)
 }

@@ -1,9 +1,12 @@
 package logic
 
 import (
+	"fmt"
+	"github.com/skip2/go-qrcode"
 	"go.uber.org/zap"
 	"web_app/dao/mysql"
 	"web_app/models"
+	"web_app/pkg/jwt"
 	"web_app/pkg/snowflake"
 )
 
@@ -21,11 +24,17 @@ func CreateCheckin(ck *models.Checkin) (err error) {
 	return
 }
 
+// DeleteCheckin 根据打卡活动id删除指定的打卡活动
+func DeleteCheckin(checkID int64) (err error) {
+	zap.L().Debug("Delete Checkin", zap.Int64("checkID", checkID))
+	return mysql.DeleteCheckin(checkID)
+}
+
 // GetCheckinDetailByID 根据活动id查询活动详情数据
 func GetCheckinDetailByID(id, page, size int64) (data *models.CheckinDetail, err error) {
 	data = &models.CheckinDetail{
 		Checkin: new(models.Checkin),
-		Members: make([]*models.UserDetail, 0),
+		Members: make([]*models.UserEasyDetail, 0),
 	}
 	// 根据活动id获取活动基础信息
 	data.Checkin, err = mysql.GetCheckinMsg(id)
@@ -291,4 +300,19 @@ func GetHistoryDetail(id int64) (data *models.MsgParticipant, err error) {
 		CheckinMsg: checkinMsg,
 	}
 	return
+}
+
+//func GetStatistics(checkinID int64) (data *models.MsgStatistics, err error) {
+//
+//}
+
+func QRCode(userID, checkinID int64) (data []byte, err error) {
+	// 生成活动指定的token
+	token, err := jwt.GenCheckinToken(userID, checkinID)
+	if err != nil {
+		return
+	}
+	// 直接生成签到页面URL
+	url := fmt.Sprintf("http://localhost:8084/sign_page?token=%s", token)
+	return qrcode.Encode(url, qrcode.Medium, 256)
 }

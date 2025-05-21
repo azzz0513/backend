@@ -5,13 +5,20 @@ type User struct {
 	UserID   int64  `db:"user_id"`
 	Username string `db:"username"`
 	Password string `db:"password"`
+	Email    string `db:"email"`
 	Token    string
+}
+
+// UserEasyDetail 用户简单详情结构体
+type UserEasyDetail struct {
+	UserID   int64  `json:"user_id" gorm:"column:user_id"`
+	UserName string `json:"user_name" gorm:"column:username"`
 }
 
 // UserDetail 用户详情结构体
 type UserDetail struct {
-	UserID   int64  `json:"user_id" gorm:"column:user_id"`
-	UserName string `json:"user_name" gorm:"column:username"`
+	*UserEasyDetail
+	Email string `json:"email" gorm:"column:email"`
 }
 
 // UpdateUser 修改用户数据的结构体
@@ -27,4 +34,15 @@ type ChangePassword struct {
 	OldPassword string `json:"old_password" binding:"required"`                                            // 用户旧密码，必填字段
 	NewPassword string `json:"new_password" gorm:"column:password" binding:"required,nefield=OldPassword"` // 用户新密码（与旧密码必须不同），必填字段
 	RePassword  string `json:"re_password" binding:"required,eqfield=NewPassword"`                         // 用户新密码确认，必填字段
+}
+
+// FindPassword 找回用户密码的结构体
+type FindPassword struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type ResetPassword struct {
+	UserName   string `json:"user_name" binding:"required"`
+	Password   string `json:"password" gorm:"column:password" binding:"required"`
+	RePassword string `json:"re_password" binding:"required,eqfield=Password"`
 }

@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS `member_list` (
     `member_count` int NOT NULL DEFAULT 0 COMMENT '列表成员数量',
     `list_name` varchar(128) COLLATE utf8mb4_general_ci NOT NULL COMMENT '列表名称',
     `create_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`list_id`),
-    KEY `idx_list_id` (`list_id`),
+    PRIMARY KEY (`id`,`list_id`),
+    UNIQUE KEY `idx_list_id` (`list_id`),
     KEY `idx_author_id` (`author_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS `list_participants` (
     PRIMARY KEY (`list_id`, `user_id`),
     FOREIGN KEY (`list_id`) REFERENCES `member_list`(`list_id`) ON DELETE CASCADE,
     FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE,
+    KEY `idx_list_id` (`list_id`),
     KEY `idx_member_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -137,8 +138,7 @@ CREATE TABLE IF NOT EXISTS `checkin_records` (
     check_time timestamp NULL COMMENT '最后一次打卡时间',
     PRIMARY KEY (checkin_id, user_id),
     FOREIGN KEY (checkin_id) REFERENCES checkins(checkin_id) ON DELETE CASCADE,
-    FOREIGN KEY (list_id) REFERENCES member_list(list_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES list_participants(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (list_id, user_id) REFERENCES list_participants(list_id, user_id) ON DELETE CASCADE,
     INDEX idx_check_time (check_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

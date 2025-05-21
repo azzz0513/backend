@@ -113,6 +113,43 @@ func DeleteMemberHandler(c *gin.Context) {
 	ResponseSuccess(c, nil)
 }
 
+// JoinMemberListHandler 用户主动加入指定的用户列表
+// @Tags 用户列表管理
+// @Summary 用户主动加入指定用户列表
+// @Description 接收前端数据并将当前用户加入指定用户列表中
+// @Router /api/v1/join/{id} [get]
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":[]*models.ListDetail}"
+func JoinMemberListHandler(c *gin.Context) {
+	// 获取参数（从URL中获取当前用户列表的id）
+	m := new(models.UpdateMember)
+	idStr := c.Param("id")
+	listID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("controller.JoinMemberListHandler failed", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	m.ListID = listID
+	// 获取当前用户id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	m.MemberID = userID
+	// 用户加入用户列表的具体逻辑
+	if err := logic.AddMember(m); err != nil {
+		zap.L().Error("logic.AddMember failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
+}
+
 // GetListListHandler 获取当前用户创建的用户列表的处理函数
 // @Tags 用户列表管理
 // @Summary 获取当前用户创建的用户列表

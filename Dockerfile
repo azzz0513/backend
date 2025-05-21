@@ -31,8 +31,6 @@ WORKDIR /app
 # 从builder镜像中把/build/checkin拷贝到当前目录
 COPY --from=builder /build/checkin_app /app/
 COPY ./wait-for.sh /app/
-COPY ./templates/ /app/templates/
-COPY ./static/ /app/static/
 COPY ./conf/ /app/conf/
 
 RUN set -eux; \
