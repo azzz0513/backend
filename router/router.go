@@ -22,7 +22,7 @@ func SetUp(mode string) *gin.Engine {
 	r := gin.New()
 	// 配置 CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://127.0.0.1:8087", "http://localhost:8087", "http://3.138.230.142:8087"}, // 前端地址
+		AllowOrigins:     []string{"http://127.0.0.1:8087", "http://localhost:8087", "http://8.138.230.142:8087"}, // 前端地址
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -30,7 +30,7 @@ func SetUp(mode string) *gin.Engine {
 		MaxAge:           12 * time.Hour,
 	}))
 	// 使用中间件
-	r.Use(logger.GinLogger(), logger.GinRecovery(true), middlewares.RateLimitMiddleware(2*time.Second, 1000))
+	r.Use(logger.GinLogger(), logger.GinRecovery(true), middlewares.RateLimitMiddleware(1*time.Second, 1000))
 
 	r.LoadHTMLFiles("templates/index.html")
 	r.Static("/static", "./static")
@@ -60,7 +60,7 @@ func SetUp(mode string) *gin.Engine {
 		// 修改用户密码
 		v1.POST("/change_password", controller.ChangePasswordHandler)
 		// 获取用户详情
-		v1.GET("/user_detail/:id", controller.GetUserDetailHandler)
+		v1.GET("/user_detail", controller.GetUserDetailHandler)
 
 		// 创建成员名单
 		v1.POST("/create_member_list", controller.CreateMemberListHandler)
@@ -74,6 +74,8 @@ func SetUp(mode string) *gin.Engine {
 		v1.GET("/member_list/:id", controller.GetListDetailHandler)
 		// 用户主动加入成员名单
 		v1.POST("/join/:id", controller.JoinMemberListHandler)
+		// 生成并获取加入成员名单的链接
+		v1.GET("/get_url/:id", controller.GetJoinURLHandler)
 
 		// 发布打卡活动
 		v1.POST("/checkin", controller.CreateCheckinHandler)
@@ -84,7 +86,7 @@ func SetUp(mode string) *gin.Engine {
 		// 获取用户当前参与的活动的详情数据
 		v1.GET("/participate_detail/:id", controller.GetParticipateDetailHandler)
 		// 查看统计数据（长期考勤）（可分别查看前一日，前一周，以及前一个月的数据）
-		//v1.GET("/statistics/:id", controller.GetStatisticsHandler)
+		v1.GET("/statistics/:id", controller.GetStatisticsHandler)
 		// 查看创建的打卡活动详情（30天内）
 		v1.GET("/checkin/:id", controller.GetCheckinDetailHandler)
 		// 查看当前用户需要参加的打卡活动列表（活动未结束）
@@ -95,9 +97,10 @@ func SetUp(mode string) *gin.Engine {
 		v1.GET("/history", controller.GetHistoryListHandler)
 		// 查看已参与过的打卡活动历史记录详情
 		v1.GET("/history/:id", controller.GetHistoryDetailHandler)
-
-		// 测试：生成二维码
-		v1.GET("/qrcode/:id", controller.QRCodeHandler)
+		// 处理二维码签到
+		v1.GET("/qr_checkin", controller.QRCheckinHandler)
+		// 处理定位签到
+		v1.POST("/position_checkin/:id", controller.PositionCheckinHandler)
 	}
 
 	// 注册pprof相关路由

@@ -66,3 +66,9 @@ func ResponseSuccess(c *gin.Context, data interface{}) {
 		Data: data,
 	})
 }
+
+// ResponseSuccessWithPng 成功返回图像
+// swagger:response pngSuccessResponse
+func ResponseSuccessWithPng(c *gin.Context, data []byte) {
+	c.Data(http.StatusOK, "image/png", data)
+}

@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-const TokenExpireDuration = time.Hour * 24 * 365
-
 var mySecret = []byte("secret")
 
 // MyClaims 自定义声明结构体并内嵌jwt，StandardClaims
@@ -21,7 +19,6 @@ type MyClaims struct {
 }
 
 type CheckinClaims struct {
-	UserID    int64 `json:"user_id"`
 	CheckinID int64 `json:"checkin_id"`
 	jwt.StandardClaims
 }
@@ -42,14 +39,14 @@ func GenToken(userID int64) (string, error) {
 	return token.SignedString(mySecret)
 }
 
-func GenCheckinToken(userID, checkinID int64) (string, error) {
+// GenCheckinToken 生成打卡活动token
+func GenCheckinToken(checkinID int64, duration uint) (string, error) {
 	// 创建声明
 	c := CheckinClaims{
-		UserID:    userID,
 		CheckinID: checkinID,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(viper.GetDuration("auth.jwt_expire") * time.Hour).Unix(), // 过期时间
-			Issuer:    "shit",                                                                  // 签发人
+			ExpiresAt: time.Now().Add(time.Duration(duration) * time.Minute).Unix(), // 过期时间
+			Issuer:    "shit",                                                       // 签发人
 		},
 	}
 	// 使用指定的签名方法创建签名对象
@@ -67,6 +64,20 @@ func ParseToken(tokenString string) (claims *MyClaims, err error) {
 		return nil, err
 	}
 	if claims, ok := token.Claims.(*MyClaims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, errors.New("invalid token")
+}
+
+func ParseCheckinToken(tokenString string) (claims *CheckinClaims, err error) {
+	// 解析token
+	token, err := jwt.ParseWithClaims(tokenString, &CheckinClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return mySecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if claims, ok := token.Claims.(*CheckinClaims); ok && token.Valid {
 		return claims, nil
 	}
 	return nil, errors.New("invalid token")

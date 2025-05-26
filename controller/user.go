@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
-	"strconv"
 	"web_app/dao/mysql"
 	"web_app/logic"
 	"web_app/models"
@@ -111,16 +110,23 @@ func LoginHandler(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func GetUserDetailHandler(c *gin.Context) {
-	// 获取参数（从URL中获取用户id）
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	//// 获取参数（从URL中获取用户id）
+	//idStr := c.Param("id")
+	//id, err := strconv.ParseInt(idStr, 10, 64)
+	//if err != nil {
+	//	zap.L().Error("Get user id from param failed", zap.Error(err))
+	//	ResponseError(c, CodeInvalidParam)
+	//	return
+	//}
+	// 获取当前用户的id
+	userID, err := getCurrentUserID(c)
 	if err != nil {
-		zap.L().Error("Get user id from param failed", zap.Error(err))
-		ResponseError(c, CodeInvalidParam)
+		zap.L().Error("GetUserDetailHandler failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
 		return
 	}
 	// 根据用户id获取用户详情
-	data, err := logic.GetUserDetail(id)
+	data, err := logic.GetUserDetail(userID)
 	if err != nil {
 		zap.L().Error("logic.GetUserDetail failed", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
@@ -230,6 +236,14 @@ func FindPasswordHandler(c *gin.Context) {
 }
 
 // ResetPasswordHandler 处理重置密码请求
+// @Tags 用户管理
+// @Summary 用户密码重置
+// @Description 接收前端数据重置用户密码
+// @Param request body models.ResetPassword  true  "用户密码重置参数"
+// @Router /api/v1/reset_password [post]
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func ResetPasswordHandler(c *gin.Context) {
 	// 获取请求参数
 	u := new(models.ResetPassword)

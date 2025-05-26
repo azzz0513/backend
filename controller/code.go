@@ -15,6 +15,7 @@ const (
 	CodeInvalidToken
 	CodeNeedPassword
 	CodeTimeOut
+	CodeOutRange
 )
 
 var codeMsgMap = map[ResCode]string{
@@ -28,6 +29,7 @@ var codeMsgMap = map[ResCode]string{
 	CodeInvalidToken:    "无效的Token",
 	CodeNeedPassword:    "需要正确的验证码",
 	CodeTimeOut:         "活动超时或未开始",
+	CodeOutRange:        "超出打卡范围",
 }
 
 func (code ResCode) Msg() string {

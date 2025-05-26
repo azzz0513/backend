@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS `way` (
 )ENGINE=InnoDB DEFAULT  CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `way` VALUES ('1', '1', '验证码签到', '2025-04-24 11:17:11', '2025-04-24 11:17:11');
+INSERT INTO `way` VALUES ('2', '2', '二维码签到', '2025-05-21 15:45:00', '2025-05-21 15:45:00');
+INSERT INTO `way` VALUES ('3', '3', '定位签到', '2025-05-21 15:45:00', '2025-05-21 15:45:00');
 
 CREATE TABLE IF NOT EXISTS `member_list` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -78,6 +80,11 @@ CREATE TABLE IF NOT EXISTS `checkins` (
 
     -- 验证码打卡专用字段
     `password` varchar(64) COLLATE utf8mb4_general_ci COMMENT '验证码',
+
+    -- 定位打卡专用字段
+    `longitude` DOUBLE COMMENT '经度',
+    `latitude` DOUBLE COMMENT '纬度',
+    `radius` DOUBLE COMMENT '半径',
 
     -- 长期考勤专用字段
     `start_date` DATE NULL COMMENT '开始日期（长期活动必填）',
@@ -120,6 +127,13 @@ CREATE TABLE IF NOT EXISTS `checkins` (
     CONSTRAINT chk_password CHECK (
         (way_id != 1) OR (  -- way_id=1是验证码签到类型
             password IS NOT NULL
+        )
+    ),
+    CONSTRAINT chk_positioning CHECK (
+        (way_id != 3) OR ( -- way_id=3是定位签到类型
+            longitude IS NOT NULL
+            AND latitude IS NOT NULL
+            AND radius IS NOT NULL
         )
     ),
     CONSTRAINT chk_date_order CHECK (

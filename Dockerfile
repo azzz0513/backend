@@ -1,4 +1,4 @@
-FROM golang:alpine AS builder
+FROM golang:1.23.0 AS builder
 
 # 为镜像设置必要的环境变量
 ENV GO111MODULE=on \
@@ -31,6 +31,7 @@ WORKDIR /app
 # 从builder镜像中把/build/checkin拷贝到当前目录
 COPY --from=builder /build/checkin_app /app/
 COPY ./wait-for.sh /app/
+COPY ./templates/ /app/templates/
 COPY ./conf/ /app/conf/
 
 RUN set -eux; \

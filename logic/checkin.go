@@ -1,9 +1,11 @@
 package logic
 
 import (
+	"errors"
 	"fmt"
 	"github.com/skip2/go-qrcode"
 	"go.uber.org/zap"
+	"math"
 	"web_app/dao/mysql"
 	"web_app/models"
 	"web_app/pkg/jwt"
@@ -33,8 +35,9 @@ func DeleteCheckin(checkID int64) (err error) {
 // GetCheckinDetailByID 根据活动id查询活动详情数据
 func GetCheckinDetailByID(id, page, size int64) (data *models.CheckinDetail, err error) {
 	data = &models.CheckinDetail{
-		Checkin: new(models.Checkin),
-		Members: make([]*models.UserEasyDetail, 0),
+		Checkin:          new(models.Checkin),
+		UnCheckedMembers: make([]*models.UserEasyDetail, 0),
+		CheckedMembers:   make([]*models.UserEasyDetail, 0),
 	}
 	// 根据活动id获取活动基础信息
 	data.Checkin, err = mysql.GetCheckinMsg(id)
@@ -43,22 +46,41 @@ func GetCheckinDetailByID(id, page, size int64) (data *models.CheckinDetail, err
 		return
 	}
 	// 根据checkin_id获取未完成打卡活动的成员
-	data.Count, data.Members, err = mysql.CheckMember(id, page, size)
+	data.UnCheckedCount, data.UnCheckedMembers, err = mysql.UnCheckedMember(id, page, size)
 	if err != nil {
-		zap.L().Error("mysql.CheckMember failed", zap.Error(err))
+		zap.L().Error("mysql.UnCheckedMember failed", zap.Error(err))
+		return
+	}
+	// 根据checkin_id获取已完成打卡活动的成员
+	data.CheckedCount, data.CheckedMembers, err = mysql.CheckedMember(id, page, size)
+	if err != nil {
+		zap.L().Error("mysql.CheckedMember failed", zap.Error(err))
 		return
 	}
 	return
 }
 
 // Participate 参与当前活动
-func Participate(userID, checkinID int64) (err error) {
+func Participate(p *models.ParticipateMsg) (err error) {
+	zap.L().Debug("Participate",
+		zap.Int64("checkinID", p.CheckinID),
+		zap.Int64("userID", p.UserID))
+	// 判断用户验证码是否正确
+	ok, err := mysql.CheckCheckinPassword(p.CheckinID, p.PassWord)
+	if err != nil {
+		zap.L().Error("mysql.CheckCheckinPassword failed", zap.Error(err))
+		return
+	}
+	if !ok {
+		return errors.New("活动验证码错误")
+	}
 	// 修改数据库
-	return mysql.Participate(userID, checkinID)
+	return mysql.Participate(p.UserID, p.CheckinID)
 }
 
 // GetCheckinList 根据用户id获取当前用户需要参与的活动列表
 func GetCheckinList(userID, page, size int64) (data []*models.MsgParticipant, err error) {
+	data = make([]*models.MsgParticipant, 0)
 	// 获取当前用户需要参与的活动列表
 	checkins, err := mysql.GetCheckinList(userID, page, size)
 	if err != nil {
@@ -106,6 +128,7 @@ func GetCheckinList(userID, page, size int64) (data []*models.MsgParticipant, er
 
 // GetCreatedCheckinList 根据用户id获取当前用户创建的打卡活动列表
 func GetCreatedCheckinList(userID, page, size int64) (data []*models.MsgCreator, err error) {
+	data = make([]*models.MsgCreator, 0)
 	// 获取当前用户需要参与的活动列表
 	checkins, err := mysql.GetCreatedCheckinList(userID, page, size)
 	if err != nil {
@@ -198,6 +221,7 @@ func GetParticipateDetail(id int64) (data *models.MsgParticipant, err error) {
 
 // GetHistoryList 根据用户id获取当前用户参与过的打卡活动历史记录
 func GetHistoryList(userID, page, size int64) (data []*models.MsgHistory, err error) {
+	data = make([]*models.MsgHistory, 0)
 	// 获取当前用户已参与的活动历史记录列表
 	checkins, err := mysql.GetHistoryList(userID, page, size)
 	if err != nil {
@@ -302,17 +326,75 @@ func GetHistoryDetail(id int64) (data *models.MsgParticipant, err error) {
 	return
 }
 
-//func GetStatistics(checkinID int64) (data *models.MsgStatistics, err error) {
-//
-//}
+// GetStatistics 根据指定的类型获取统计数据
+func GetStatistics(checkinID int64, statsType string) (data []*models.MsgStatistics, err error) {
+	data = make([]*models.MsgStatistics, 0)
+	// 从状态表中取出数据
+	data, err = mysql.GetStatistics(checkinID, statsType)
+	if err != nil {
+		zap.L().Error("mysql.GetStatistics failed", zap.Error(err))
+		return nil, err
+	}
+	// 整合结构体
+	for _, stats := range data {
+		user, err := mysql.GetUserByID(stats.UserID)
+		if err != nil {
+			zap.L().Error("mysql.GetUserByID failed", zap.Error(err))
+			continue
+		}
+		stats.UserName = user.Username
+	}
+	return
+}
 
-func QRCode(userID, checkinID int64) (data []byte, err error) {
+// QRCode 生成二维码
+func QRCode(checkinID int64, duration uint) (data []byte, err error) {
 	// 生成活动指定的token
-	token, err := jwt.GenCheckinToken(userID, checkinID)
+	token, err := jwt.GenCheckinToken(checkinID, duration)
 	if err != nil {
 		return
 	}
 	// 直接生成签到页面URL
-	url := fmt.Sprintf("http://localhost:8084/sign_page?token=%s", token)
+	url := fmt.Sprintf("http://3.138.230.142:8888/api/v1/qr_checkin?token=%s", token)
 	return qrcode.Encode(url, qrcode.Medium, 256)
+}
+
+// QRCheckin 二维码签到
+func QRCheckin(p *models.ParticipateMsg) (err error) {
+	zap.L().Debug("QRCheckin",
+		zap.Int64("userID", p.UserID),
+		zap.Int64("checkinID", p.CheckinID))
+	return mysql.Participate(p.UserID, p.CheckinID)
+}
+
+func PositionCheckin(r *models.PosCheckin) (err error) {
+	zap.L().Debug("GeoCheckin",
+		zap.Int64("userID", r.UserID),
+		zap.Int64("checkinID", r.CheckinID))
+	// 获取当前活动的定位范围
+	oLat, oLng, oRadius, err := mysql.GetRangeByID(r.CheckinID)
+	if err != nil {
+		zap.L().Error("mysql.GetRangeByID failed", zap.Error(err))
+		return err
+	}
+	// 判断距离
+	distance := calculateDistance(oLat, oLng, r.Lat, r.Lng)
+	if distance <= oRadius {
+		return mysql.Participate(r.UserID, r.CheckinID)
+	}
+	return errors.New("打卡距离超出范围")
+}
+
+func calculateDistance(lat1, lng1, lat2, lng2 float64) float64 {
+	const R = 6371000
+	φ1 := lat1 * math.Pi / 180
+	φ2 := lat2 * math.Pi / 180
+	Δφ := (lat2 - lat1) * math.Pi / 180
+	Δλ := (lng2 - lng1) * math.Pi / 180
+
+	a := math.Sin(Δφ/2)*math.Sin(Δφ/2) +
+		math.Cos(φ1)*math.Cos(φ2)*
+			math.Sin(Δλ/2)*math.Sin(Δλ/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return R * c
 }

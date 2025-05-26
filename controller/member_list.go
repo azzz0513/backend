@@ -117,11 +117,11 @@ func DeleteMemberHandler(c *gin.Context) {
 // @Tags 用户列表管理
 // @Summary 用户主动加入指定用户列表
 // @Description 接收前端数据并将当前用户加入指定用户列表中
-// @Router /api/v1/join/{id} [get]
+// @Router /api/v1/join/{id} [post]
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":[]*models.ListDetail}"
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func JoinMemberListHandler(c *gin.Context) {
 	// 获取参数（从URL中获取当前用户列表的id）
 	m := new(models.UpdateMember)
@@ -212,5 +212,35 @@ func GetListDetailHandler(c *gin.Context) {
 		return
 	}
 	// 3.返回响应
+	ResponseSuccess(c, data)
+}
+
+// GetJoinURLHandler 获取参与当前用户列表的链接的处理函数
+// @Tags 用户列表管理
+// @Summary 获取参与当前用户列表的链接
+// @Description 获取参与当前用户列表的链接
+// @Router /api/v1/get_url/{id} [get]
+// @Param id path string true "当前列表id"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":string}"
+func GetJoinURLHandler(c *gin.Context) {
+	// 获取参数（从url中解析出活动id）
+	idStr := c.Param("id")
+	checkinID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("controller.JoinURLHandler failed", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 具体的生成url链接逻辑
+	data, err := logic.GetJoinURL(checkinID)
+	if err != nil {
+		zap.L().Error("controller.GetJoinURL failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
 	ResponseSuccess(c, data)
 }

@@ -32,20 +32,20 @@ type Checkin struct {
 	DurationMinutes uint      `json:"duration_minutes,omitempty" gorm:"column:duration_minutes"` // 打卡活动持续时间，分钟数，活动为一次性签到时为必填字段
 }
 
-// CheckinDetail 打卡活动详情
-type CheckinDetail struct {
-	Count    int               `json:"count"`   // 已完成人员数
-	Members  []*UserEasyDetail `json:"members"` // 未完成人员列表
-	*Checkin                   // 内嵌活动结构体
-}
-
-//type CheckinDetail2 struct {
-//	CheckedCount int  `json:"checked_count"` // 已完成人数
-//	UnCheckedCount int  `json:"un_checked_count"` // 未完成人数
-//	CheckedMembers []*UserEasyDetail `json:"checked_members"` // 已完成成员列表
-//	UnCheckedMembers []*UserEasyDetail `json:"un_checked_members"` // 未完成成员列表
-//	*Checkin // 内嵌活动结构体
+//// CheckinDetail 打卡活动详情
+//type CheckinDetail struct {
+//	Count    int               `json:"count"`   // 已完成人员数
+//	Members  []*UserEasyDetail `json:"members"` // 未完成人员列表
+//	*Checkin                   // 内嵌活动结构体
 //}
+
+type CheckinDetail struct {
+	CheckedCount     int               `json:"checked_count"`      // 已完成人数
+	UnCheckedCount   int               `json:"un_checked_count"`   // 未完成人数
+	CheckedMembers   []*UserEasyDetail `json:"checked_members"`    // 已完成成员列表
+	UnCheckedMembers []*UserEasyDetail `json:"un_checked_members"` // 未完成成员列表
+	*Checkin                           // 内嵌活动结构体
+}
 
 // Statistics 长期考勤活动统计数据结构体
 type Statistics struct {
@@ -102,4 +102,41 @@ type MsgCreator struct {
 type MsgHistory struct {
 	CheckTime       time.Time `json:"check_time"` // 打卡时间
 	*MsgParticipant           // 内嵌活动参与者获取的打卡活动信息结构体
+}
+
+// ParticipateMsg 定义参与活动请求信息结构体
+type ParticipateMsg struct {
+	UserID    int64  `json:"user_id" gorm:"column:user_id"`       // 用户id
+	CheckinID int64  `json:"checkin_id" gorm:"column:checkin_id"` // 打卡活动id
+	PassWord  string `json:"password" gorm:"column:password"`     // 验证码
+}
+
+// StatisticsType 定义统计数据类型请求信息结构体
+type StatisticsType struct {
+	Type string `form:"type" binding:"required,oneof=day week month year"` // 统计数据类型
+}
+
+// MsgStatistics 统计数据信息结构体
+type MsgStatistics struct {
+	CheckinID    int64     `json:"checkin_id" gorm:"column:checkin_id"`        // 打卡活动id
+	UserID       int64     `json:"user_id" gorm:"column:user_id"`              // 用户id
+	UserName     string    `json:"user_name" gorm:"column:user_name"`          // 用户名
+	CheckinCount uint      `json:"checkin_count" gorm:"column:checkin_count"`  // 打卡次数
+	LastCheck    time.Time `json:"last_check" gorm:"column:last_checkin_time"` // 最后打卡时间
+}
+
+// MsgPosition 打卡活动定位信息结构体
+type MsgPosition struct {
+	CheckinID int64   `json:"checkin_id" gorm:"column:checkin_id"` // 活动id
+	Lat       float64 `json:"lat" gorm:"column:latitude"`          // 纬度
+	Lng       float64 `json:"lng" gorm:"column:longitude"`         // 经度
+	Radius    float64 `json:"radius" gorm:"column:radius"`         // 半径
+}
+
+// PosCheckin 参与定位打卡活动参数结构体
+type PosCheckin struct {
+	CheckinID int64   `json:"checkin_id" gorm:"column:checkin_id"`             // 活动id
+	UserID    int64   `json:"user_id" gorm:"column:user_id"`                   // 用户id
+	Lat       float64 `json:"lat" gorm:"column:latitude" binding:"required"`   // 纬度
+	Lng       float64 `json:"lng" gorm:"column:longitudes" binding:"required"` // 经度
 }

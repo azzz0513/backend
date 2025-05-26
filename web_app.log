@@ -1,0 +1,10 @@
+2025-05-25T20:52:03.666+0800	DEBUG	backend/main.go:52	logger init success
+2025-05-25T20:52:03.808+0800	INFO	mysql/StatusChecker.go:42	状态更新完成	{"影响行数": 1}
+2025-05-25T20:52:03.809+0800	INFO	mysql/StatusChecker.go:80	状态更新完成	{"影响行数": 0}
+2025-05-25T20:52:03.809+0800	INFO	statuschecker/statuschecker.go:13	开机状态检查	{"start_time": "2025-05-25T20:52:03.809+0800"}
+2025-05-25T20:52:14.507+0800	INFO	logger/logger.go:81	/api/v1/member_list/13812165026779136	{"status": 200, "method": "GET", "path": "/api/v1/member_list/13812165026779136", "query": "page=1&size=10", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.44.0", "errors": "", "cost": 0.0060834}
+2025-05-25T20:52:29.557+0800	INFO	logger/logger.go:81	/api/v1/checkin/19335815930843136	{"status": 200, "method": "GET", "path": "/api/v1/checkin/19335815930843136", "query": "page=1&size=2", "ip": "127.0.0.1", "user-agent": "PostmanRuntime/7.44.0", "errors": "", "cost": 0.0127023}
+2025-05-25T20:53:03.811+0800	INFO	mysql/StatusChecker.go:42	状态更新完成	{"影响行数": 0}
+2025-05-25T20:53:03.811+0800	INFO	mysql/StatusChecker.go:80	状态更新完成	{"影响行数": 0}
+2025-05-25T20:54:03.812+0800	INFO	mysql/StatusChecker.go:42	状态更新完成	{"影响行数": 0}
+2025-05-25T20:54:03.813+0800	INFO	mysql/StatusChecker.go:80	状态更新完成	{"影响行数": 0}

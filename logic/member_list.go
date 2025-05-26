@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"fmt"
 	"go.uber.org/zap"
 	"web_app/dao/mysql"
 	"web_app/models"
@@ -56,5 +57,11 @@ func GetListDetail(pid, page, size int64) (data []*models.ListDetail, err error)
 		zap.L().Error("mysql.GetListDetail failed", zap.Error(err))
 		return
 	}
+	return
+}
+
+// GetJoinURL 获取参与成员列表的id
+func GetJoinURL(checkinID int64) (url string, err error) {
+	url = fmt.Sprintf("http://3.138.230.142:8087/join-list.html/%d", checkinID)
 	return
 }

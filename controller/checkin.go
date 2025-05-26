@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"web_app/logic"
 	"web_app/models"
+	"web_app/pkg/jwt"
 )
 
 // CreateCheckinHandler 处理打卡活动发布
@@ -41,6 +42,17 @@ func CreateCheckinHandler(c *gin.Context) {
 		return
 	}
 	// 3.返回响应
+	if ck.WayID == 2 {
+		// 处理生成二维码的具体逻辑
+		qrBytes, err := logic.QRCode(ck.ID, ck.DurationMinutes)
+		if err != nil {
+			zap.L().Error("logic.QRCode err", zap.Error(err))
+			ResponseError(c, CodeServerBusy)
+			return
+		}
+		// 返回响应
+		ResponseSuccessWithPng(c, qrBytes)
+	}
 	ResponseSuccess(c, nil)
 }
 
@@ -147,7 +159,14 @@ func GetParticipateDetailHandler(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
 func ParticipateHandler(c *gin.Context) {
-	// 1.获取参数（从URL中获取当前活动id）
+	// 获取请求参数
+	p := new(models.ParticipateMsg)
+	if err := c.ShouldBindJSON(p); err != nil {
+		zap.L().Error("controller.ParticipateHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 获取参数（从URL中获取当前活动id）
 	checkinIDStr := c.Param("id")
 	checkinID, err := strconv.ParseInt(checkinIDStr, 10, 64)
 	if err != nil {
@@ -155,19 +174,21 @@ func ParticipateHandler(c *gin.Context) {
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	// 2.获取当前用户的id
+	p.CheckinID = checkinID
+	// 获取当前用户的id
 	userID, err := getCurrentUserID(c)
 	if err != nil {
 		ResponseError(c, CodeNeedLogin)
 		return
 	}
-	// 3.处理参与打卡活动
-	if err := logic.Participate(userID, checkinID); err != nil {
+	p.UserID = userID
+	// 处理参与打卡活动
+	if err := logic.Participate(p); err != nil {
 		zap.L().Error("logic.Participate err", zap.Error(err))
 		ResponseError(c, CodeTimeOut)
 		return
 	}
-	// 4.返回响应
+	// 返回响应
 	ResponseSuccess(c, nil)
 }
 
@@ -295,48 +316,116 @@ func GetHistoryDetailHandler(c *gin.Context) {
 }
 
 // GetStatisticsHandler 处理获取用户创建的长期考勤活动的数据
-//func GetStatisticsHandler(c *gin.Context) {
-//	// 获取参数（从URL中获取当前打卡活动的id）
-//	idStr := c.Param("id")
-//	id, err := strconv.ParseInt(idStr, 10, 64)
-//	if err != nil {
-//		zap.L().Error("controller.GetStatisticsHandler err", zap.Error(err))
-//		ResponseError(c, CodeInvalidParam)
-//		return
-//	}
-//	// 根据id取出打卡活动的数据统计
-//	data, err := logic.GetStatistics(id)
-//	if err != nil {
-//		zap.L().Error("logic.GetStatistics err", zap.Error(err))
-//		ResponseError(c, CodeServerBusy)
-//		return
-//	}
-//	// 返回响应
-//	ResponseSuccess(c, data)
-//}
-
-func QRCodeHandler(c *gin.Context) {
+// @Tags 打卡活动管理
+// @Summary 获取当前打卡活动的统计数据
+// @Description 获取当前打卡活动的统计数据并发送到前端
+// @Router /api/v1/statistics/{id} [get]
+// @Param id path string true "活动ID"
+// @Param type query string true "数据种类"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":[]*models.MsgStatistics}"
+func GetStatisticsHandler(c *gin.Context) {
 	// 获取请求参数
-	idStr := c.Param("id")
-	checkinID, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		zap.L().Error("controller.QRCodeHandler err", zap.Error(err))
+	t := new(models.StatisticsType)
+	if err := c.ShouldBindQuery(t); err != nil {
+		zap.L().Error("controller.GetStatisticsHandler err", zap.Error(err))
 		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	// 获取当前用户id
-	userId, err := getCurrentUserID(c)
+	// 获取参数（从URL中获取当前打卡活动的id）
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		ResponseError(c, CodeNeedLogin)
+		zap.L().Error("controller.GetStatisticsHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
 		return
 	}
-	// 处理生成二维码的具体逻辑
-	qrBytes, err := logic.QRCode(userId, checkinID)
+	// 根据id取出打卡活动的数据统计
+	data, err := logic.GetStatistics(id, t.Type)
 	if err != nil {
-		zap.L().Error("logic.QRCode err", zap.Error(err))
+		zap.L().Error("logic.GetStatistics err", zap.Error(err))
 		ResponseError(c, CodeServerBusy)
 		return
 	}
 	// 返回响应
-	c.Data(200, "image/png", qrBytes)
+	ResponseSuccess(c, data)
+}
+
+// QRCheckinHandler 处理扫描二维码后签到
+// @Tags 打卡活动管理
+// @Summary 处理二维码签到
+// @Description 处理二维码签到
+// @Router /api/v1/qr_checkin [post]
+// @Param token query string true "Token"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+func QRCheckinHandler(c *gin.Context) {
+	// 获取请求参数
+	p := new(models.ParticipateMsg)
+	token := c.Query("token")
+	// 解析JWT令牌
+	ckc, err := jwt.ParseCheckinToken(token)
+	if err != nil {
+		zap.L().Error("controller.QRCheckinHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidToken)
+		return
+	}
+	p.CheckinID = ckc.CheckinID
+	// 获取当前用户的id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		zap.L().Error("controller.QRCheckinHandler err", zap.Error(err))
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	p.UserID = userID
+	// 执行签到的具体逻辑
+	if err := logic.QRCheckin(p); err != nil {
+		zap.L().Error("controller.QRCheckin err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
+}
+
+// PositionCheckinHandler 处理定位打卡活动
+// @Tags 打卡活动管理
+// @Summary 处理定位打卡
+// @Description 接收前端数据处理定位打卡
+// @Router /api/v1/position_checkin/{id} [post]
+// @Param id path string true "活动ID"
+// @Param request body models.PosCheckin true  "定位打卡请求参数"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":null}"
+func PositionCheckinHandler(c *gin.Context) {
+	// 获取请求参数
+	r := new(models.PosCheckin)
+	if err := c.ShouldBindJSON(r); err != nil {
+		zap.L().Error("controller.GeoCheckinHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 获取当前用户id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		zap.L().Error("controller.GeoCheckinHandler err", zap.Error(err))
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	r.UserID = userID
+	// 处理定位签到的具体逻辑
+	if err := logic.PositionCheckin(r); err != nil {
+		zap.L().Error("controller.GeoCheckin err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, nil)
 }
