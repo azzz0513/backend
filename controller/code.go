@@ -16,6 +16,7 @@ const (
 	CodeNeedPassword
 	CodeTimeOut
 	CodeOutRange
+	CodeMemberExist
 )
 
 var codeMsgMap = map[ResCode]string{
@@ -30,6 +31,7 @@ var codeMsgMap = map[ResCode]string{
 	CodeNeedPassword:    "需要正确的验证码",
 	CodeTimeOut:         "活动超时或未开始",
 	CodeOutRange:        "超出打卡范围",
+	CodeMemberExist:     "用户已在列表中",
 }
 
 func (code ResCode) Msg() string {

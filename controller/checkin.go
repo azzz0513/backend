@@ -42,17 +42,6 @@ func CreateCheckinHandler(c *gin.Context) {
 		return
 	}
 	// 3.返回响应
-	if ck.WayID == 2 {
-		// 处理生成二维码的具体逻辑
-		qrBytes, err := logic.QRCode(ck.ID, ck.DurationMinutes)
-		if err != nil {
-			zap.L().Error("logic.QRCode err", zap.Error(err))
-			ResponseError(c, CodeServerBusy)
-			return
-		}
-		// 返回响应
-		ResponseSuccessWithPng(c, qrBytes)
-	}
 	ResponseSuccess(c, nil)
 }
 
@@ -386,11 +375,83 @@ func QRCheckinHandler(c *gin.Context) {
 	// 执行签到的具体逻辑
 	if err := logic.QRCheckin(p); err != nil {
 		zap.L().Error("controller.QRCheckin err", zap.Error(err))
-		ResponseError(c, CodeServerBusy)
+		ResponseErrorWithMsg(c, CodeServerBusy, err.Error())
 		return
 	}
 	// 返回响应
 	ResponseSuccess(c, nil)
+}
+
+// GetUserInfoHandler 处理检验用户活动权限
+// @Tags 打卡活动管理
+// @Summary 处理检验用户活动权限
+// @Description 检验用户活动权限并返回用户信息
+// @Router /api/v1/info [get]
+// @Param token query string true "Token"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+func GetUserInfoHandler(c *gin.Context) {
+	// 验证Token
+	token := c.Query("token")
+	if token == "" {
+		zap.L().Error("token失效")
+		ResponseError(c, CodeInvalidToken)
+		return
+	}
+	// 解析JWT令牌
+	ckc, err := jwt.ParseCheckinToken(token)
+	if err != nil {
+		zap.L().Error("controller.QRCheckinHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidToken)
+		return
+	}
+	checkID := ckc.CheckinID
+	// 获取当前用户的id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		zap.L().Error("controller.QRCheckinHandler err", zap.Error(err))
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	// 判断当前用户是否有参与该活动的权限
+	data, err := logic.GetUserInfo(checkID, userID)
+	if err != nil {
+		zap.L().Error("controller.QRCheckinHandler err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, data)
+}
+
+// GetQRCodeHandler 处理获取活动二维码
+// @Tags 打卡活动管理
+// @Summary 处理获取活动二维码
+// @Description 生成二维码并返回前端
+// @Router /api/v1/qr_code/{id} [get]
+// @Param id path string true "活动ID"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+func GetQRCodeHandler(c *gin.Context) {
+	// 获取请求参数（从url中获取活动id）
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("controller.GetQRCodeHandler err", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 处理生成二维码的具体逻辑
+	qrBytes, err := logic.QRCode(id)
+	if err != nil {
+		zap.L().Error("logic.QRCode err", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccessWithPng(c, qrBytes)
 }
 
 // PositionCheckinHandler 处理定位打卡活动

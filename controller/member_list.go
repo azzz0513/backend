@@ -244,3 +244,44 @@ func GetJoinURLHandler(c *gin.Context) {
 	// 返回响应
 	ResponseSuccess(c, data)
 }
+
+// GetJoinInfoHandler 处理检查当前用户是否已加入列表并返回信息
+// @Tags 用户列表管理
+// @Summary 检查当前用户是否已加入列表并返回信息
+// @Description 检查当前用户是否已加入列表并返回信息
+// @Router /api/v1/join_info/{id} [get]
+// @Param id path string true "当前列表id"
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} ResponseData "成功响应示例：{"code":1000,"msg":"业务处理成功","data":models.JoinInfo}"
+func GetJoinInfoHandler(c *gin.Context) {
+	// 获取请求参数
+	idStr := c.Param("id")
+	listID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		zap.L().Error("controller.JoinURLHandler failed", zap.Error(err))
+		ResponseError(c, CodeInvalidParam)
+		return
+	}
+	// 获取当前用户id
+	userID, err := getCurrentUserID(c)
+	if err != nil {
+		ResponseError(c, CodeNeedLogin)
+		return
+	}
+	// 处理检查的具体逻辑
+	data, exists, err := logic.GetJoinInfo(listID, userID)
+	if exists {
+		zap.L().Error("用户已加入列表", zap.Error(err))
+		ResponseError(c, CodeMemberExist)
+		return
+	}
+	if err != nil {
+		zap.L().Error("controller.GetJoinInfo failed", zap.Error(err))
+		ResponseError(c, CodeServerBusy)
+		return
+	}
+	// 返回响应
+	ResponseSuccess(c, data)
+}

@@ -39,6 +39,7 @@ type Checkin struct {
 //	*Checkin                   // 内嵌活动结构体
 //}
 
+// CheckinDetail 打卡活动详情
 type CheckinDetail struct {
 	CheckedCount     int               `json:"checked_count"`      // 已完成人数
 	UnCheckedCount   int               `json:"un_checked_count"`   // 未完成人数
@@ -68,7 +69,7 @@ type CheckinRecord struct {
 
 // CheckinMsg 打卡活动基础信息结构体
 type CheckinMsg struct {
-	CheckinID  int64     `json:"checkin_id"`  // 打卡活动id
+	CheckinID  string    `json:"checkin_id"`  // 打卡活动id
 	Type       string    `json:"type"`        // 打卡活动类型
 	Way        string    `json:"way"`         // 打卡方式
 	Title      string    `json:"title"`       // 打卡活动标题
@@ -139,4 +140,9 @@ type PosCheckin struct {
 	UserID    int64   `json:"user_id" gorm:"column:user_id"`                   // 用户id
 	Lat       float64 `json:"lat" gorm:"column:latitude" binding:"required"`   // 纬度
 	Lng       float64 `json:"lng" gorm:"column:longitudes" binding:"required"` // 经度
+}
+
+type CheckinTime struct {
+	StartTime       time.Time `json:"start_time" gorm:"column:start_time"`
+	DurationMinutes uint      `json:"duration_minutes" gorm:"column:duration_minutes"`
 }

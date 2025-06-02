@@ -103,8 +103,7 @@ func LoginHandler(c *gin.Context) {
 // @Tags 用户管理
 // @Summary 获取用户详情数据
 // @Description 获取用户详情数据并发送到前端
-// @Router /api/v1/user_detail/{id} [get]
-// @Param id path string true "用户ID"
+// @Router /api/v1/user_detail [get]
 // @Security BearerAuth
 // @Accept json
 // @Produce json

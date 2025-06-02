@@ -145,7 +145,7 @@ func sendResetEmail(email, token string) (err error) {
 // ResetPassword 重置用户密码
 func ResetPassword(u *models.ResetPassword) (err error) {
 	// 判断用户是否存在
-	if err = mysql.CheckUserExist(u.UserName); err != nil {
+	if err = mysql.CheckUserExist2(u.UserName); err != nil {
 		zap.L().Error("mysql.CheckUserExist failed", zap.Error(err))
 		return
 	}

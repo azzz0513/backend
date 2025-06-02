@@ -69,6 +69,7 @@ func ParseToken(tokenString string) (claims *MyClaims, err error) {
 	return nil, errors.New("invalid token")
 }
 
+// ParseCheckinToken 解析活动token
 func ParseCheckinToken(tokenString string) (claims *CheckinClaims, err error) {
 	// 解析token
 	token, err := jwt.ParseWithClaims(tokenString, &CheckinClaims{}, func(token *jwt.Token) (interface{}, error) {

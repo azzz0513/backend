@@ -4,6 +4,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strings"
+	"time"
 	"web_app/models"
 )
 
@@ -62,7 +63,48 @@ func AddMember(m *models.UpdateMember) (err error) {
 			zap.Int64("list_id", m.ListID))
 		return ErrorListNotFound
 	}
+	// 3. 检查名单是否参与打卡活动，并添加打卡记录
+	var activeCheckins []int64
+	err = tx.Table("checkins").
+		Where("list_id = ?", m.ListID).
+		Pluck("checkin_id", &activeCheckins).Error
 
+	if err != nil {
+		tx.Rollback()
+		zap.L().Error("查询打卡活动失败",
+			zap.Int64("list_id", m.ListID),
+			zap.Error(err))
+		return
+	}
+
+	// 为每个活动添加打卡记录
+	if len(activeCheckins) > 0 {
+		records := make([]models.CheckinRecord, len(activeCheckins))
+
+		for i, checkinID := range activeCheckins {
+			records[i] = models.CheckinRecord{
+				CheckinID: checkinID,
+				UserID:    m.MemberID,
+				ListID:    m.ListID,
+				IsChecked: 0, // 未打卡
+				CheckTime: time.Now(),
+			}
+		}
+
+		if err = tx.Table("checkin_records").Create(&records).Error; err != nil {
+			tx.Rollback()
+			zap.L().Error("添加打卡记录失败",
+				zap.Int64("list_id", m.ListID),
+				zap.Int64("member_id", m.MemberID),
+				zap.Error(err))
+			return
+		}
+
+		zap.L().Info("为成员添加打卡记录",
+			zap.Int64("list_id", m.ListID),
+			zap.Int64("member_id", m.MemberID),
+			zap.Int("activity_count", len(activeCheckins)))
+	}
 	// 提交事务
 	if err = tx.Commit().Error; err != nil {
 		zap.L().Error("事务提交失败",
@@ -174,6 +216,26 @@ func GetListDetailByID(listID int64) (listName string, err error) {
 	if err = DB.Table("member_list").Where("list_id=?", listID).Select("list_name").Scan(&listName).Error; err != nil {
 		zap.L().Error("GetListDetailByID failed", zap.Error(err))
 		return "", err
+	}
+	return
+}
+
+// GetJoinInfo 判断当前用户是否加入列表并返回信息
+func GetJoinInfo(listID, userID int64) (data *models.ListDetail, exists bool, err error) {
+	data = new(models.ListDetail)
+	if err = DB.Table("list_participants").Where("list_id = ? AND user_id = ?", listID, userID).Select("count(*) > 0").Scan(&exists).Error; err != nil {
+		zap.L().Error("GetJoinInfo failed", zap.Error(err))
+		return nil, false, err
+	}
+	if err = DB.Table("users").Where("user_id = ?", userID).Select("user_id", "username").Scan(&data).Error; err != nil {
+		zap.L().Error("GetJoinInfo failed", zap.Error(err))
+		return nil, false, err
+	}
+	if exists {
+		zap.L().Warn("用户已存在",
+			zap.Int64("list_id", listID),
+			zap.Int64("user_id", userID))
+		return
 	}
 	return
 }

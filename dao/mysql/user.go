@@ -28,6 +28,18 @@ func CheckUserExist(username string) (err error) {
 	return
 }
 
+// CheckUserExist2 检查指定用户名的用户是否存在
+func CheckUserExist2(username string) (err error) {
+	var count int
+	if err := DB.Raw("select count(user_id) from users where username = ?", username).Scan(&count).Error; err != nil {
+		return err
+	}
+	if count <= 0 {
+		return ErrorUserNotExist
+	}
+	return
+}
+
 // CheckEmailExist 检查指定用户有限的用户是否存在
 func CheckEmailExist(email string) (err error) {
 	var count int

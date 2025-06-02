@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"math"
 	"time"
 	"web_app/models"
 )
@@ -136,6 +137,30 @@ func GetCheckTime(checkID, userID int64) (checkTime time.Time, err error) {
 	if err = DB.Table("checkin_records").Where("checkin_id = ? AND user_id = ?", checkID, userID).Select("check_time").Scan(&checkTime).Error; err != nil {
 		zap.L().Error("查询当前用户打卡时间失败", zap.Error(err))
 		return time.Time{}, err
+	}
+	return
+}
+
+func GetDuration(checkinId int64) (duration uint, err error) {
+	c := new(models.CheckinTime)
+	if err = DB.Table("checkins").Where("checkin_id = ?", checkinId).Select("start_time", "duration_minutes").Scan(&c).Error; err != nil {
+		zap.L().Error("获取活动时间失败", zap.Error(err))
+		return 0, err
+	}
+
+	// 计算活动结束时间
+	endTime := c.StartTime.Add(time.Duration(c.DurationMinutes) * time.Minute)
+
+	// 获取当前时间
+	currentTime := time.Now()
+
+	// 计算剩余时间（分钟）
+	oDuration := endTime.Sub(currentTime)
+	duration = uint(math.Ceil(oDuration.Minutes()))
+
+	// 如果活动已结束，返回0
+	if oDuration < 0 {
+		duration = 0
 	}
 	return
 }
@@ -406,12 +431,13 @@ func GetHistoryList(userID, page, size int64) (data []*models.Checkin, err error
 		Joins(`
             INNER JOIN checkin_records cr 
                 ON cr.checkin_id = c.checkin_id 
-                AND cr.user_id = ?`, userID).
+                AND cr.user_id = ?
+				AND cr.is_checked = 1`, userID).
 		Joins(`
             INNER JOIN list_participants lp 
                 ON c.list_id = lp.list_id 
                 AND lp.user_id = ?`, userID).
-		Where("c.status = 0").
+		Where("cr.is_checked = 1 OR c.status = 0").
 		Order("cr.check_time DESC").
 		Offset(int((page - 1) * size)).
 		Limit(int(size)).
@@ -452,6 +478,29 @@ func GetStatistics(checkinID int64, statsType string) (data []*models.MsgStatist
 	return
 }
 
+// GetUserInfo 检验用户活动权限并返回用户信息
+func GetUserInfo(checkinID, userID int64) (data *models.User, err error) {
+	data = new(models.User)
+	var exists bool
+	if err = DB.Table("checkin_records").Where("checkin_id = ? AND user_id = ?", checkinID, userID).Select("count(*) > 0").Scan(&exists).Error; err != nil {
+		zap.L().Error("检查用户活动权限失败", zap.Error(err))
+		return nil, err
+	}
+	if !exists {
+		zap.L().Error("用户无活动权限", zap.Error(err))
+		return nil, errors.New("用户无活动权限")
+	}
+	if err = DB.Table("users").
+		Where("id = ?", userID).
+		Select("user_id", "username").
+		Scan(&data).Error; err != nil {
+		zap.L().Error("获取用户信息失败", zap.Error(err))
+		return nil, err
+	}
+	return
+}
+
+// GetRangeByID 获取定位范围
 func GetRangeByID(checkinID int64) (lat, lng, radius float64, err error) {
 	p := new(models.MsgPosition)
 	if err = DB.Table("checkins").

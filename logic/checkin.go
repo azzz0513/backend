@@ -6,6 +6,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"go.uber.org/zap"
 	"math"
+	"strconv"
 	"web_app/dao/mysql"
 	"web_app/models"
 	"web_app/pkg/jwt"
@@ -109,7 +110,7 @@ func GetCheckinList(userID, page, size int64) (data []*models.MsgParticipant, er
 		}
 		// 整合结构体
 		checkinMsg := &models.CheckinMsg{
-			CheckinID:  ck.ID,
+			CheckinID:  strconv.FormatInt(ck.ID, 10),
 			Type:       typeDetail,
 			Way:        wayDetail,
 			Title:      ck.Title,
@@ -152,7 +153,7 @@ func GetCreatedCheckinList(userID, page, size int64) (data []*models.MsgCreator,
 		}
 		// 整合结构体
 		checkinMsg := &models.CheckinMsg{
-			CheckinID:  ck.ID,
+			CheckinID:  strconv.FormatInt(ck.ID, 10),
 			Type:       typeDetail,
 			Way:        wayDetail,
 			Title:      ck.Title,
@@ -196,7 +197,7 @@ func GetParticipateDetail(id int64) (data *models.MsgParticipant, err error) {
 		return nil, err
 	}
 	checkinMsg := &models.CheckinMsg{
-		CheckinID:  checkin.ID,
+		CheckinID:  strconv.FormatInt(checkin.ID, 10),
 		Type:       typeDetail,
 		Way:        wayDetail,
 		Title:      checkin.Title,
@@ -256,7 +257,7 @@ func GetHistoryList(userID, page, size int64) (data []*models.MsgHistory, err er
 		}
 		// 整合结构体
 		checkinMsg := &models.CheckinMsg{
-			CheckinID:  ck.ID,
+			CheckinID:  strconv.FormatInt(ck.ID, 10),
 			Type:       typeDetail,
 			Way:        wayDetail,
 			Title:      ck.Title,
@@ -303,7 +304,7 @@ func GetHistoryDetail(id int64) (data *models.MsgParticipant, err error) {
 		return nil, err
 	}
 	checkinMsg := &models.CheckinMsg{
-		CheckinID:  checkin.ID,
+		CheckinID:  strconv.FormatInt(checkin.ID, 10),
 		Type:       typeDetail,
 		Way:        wayDetail,
 		Title:      checkin.Title,
@@ -348,15 +349,29 @@ func GetStatistics(checkinID int64, statsType string) (data []*models.MsgStatist
 }
 
 // QRCode 生成二维码
-func QRCode(checkinID int64, duration uint) (data []byte, err error) {
+func QRCode(checkinID int64) (data []byte, err error) {
+	// 获取当前活动剩余时间
+	duration, err := mysql.GetDuration(checkinID)
+	if err != nil {
+		zap.L().Error("mysql.GetDuration failed", zap.Error(err))
+		return nil, err
+	}
 	// 生成活动指定的token
 	token, err := jwt.GenCheckinToken(checkinID, duration)
 	if err != nil {
 		return
 	}
 	// 直接生成签到页面URL
-	url := fmt.Sprintf("http://3.138.230.142:8888/api/v1/qr_checkin?token=%s", token)
+	url := fmt.Sprintf("http://8.138.230.142:8087/qr_checkin.html?token=%s", token)
 	return qrcode.Encode(url, qrcode.Medium, 256)
+}
+
+// GetUserInfo 检验当前用户是否有参与当前活动的权限
+func GetUserInfo(checkinID, userID int64) (data *models.User, err error) {
+	zap.L().Debug("GetUserInfo",
+		zap.Int64("checkinID", checkinID),
+		zap.Int64("userID", userID))
+	return mysql.GetUserInfo(checkinID, userID)
 }
 
 // QRCheckin 二维码签到
@@ -367,6 +382,7 @@ func QRCheckin(p *models.ParticipateMsg) (err error) {
 	return mysql.Participate(p.UserID, p.CheckinID)
 }
 
+// PositionCheckin 定位签到
 func PositionCheckin(r *models.PosCheckin) (err error) {
 	zap.L().Debug("GeoCheckin",
 		zap.Int64("userID", r.UserID),
@@ -385,6 +401,7 @@ func PositionCheckin(r *models.PosCheckin) (err error) {
 	return errors.New("打卡距离超出范围")
 }
 
+// 计算距离
 func calculateDistance(lat1, lng1, lat2, lng2 float64) float64 {
 	const R = 6371000
 	φ1 := lat1 * math.Pi / 180

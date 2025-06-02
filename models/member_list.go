@@ -17,6 +17,12 @@ type UpdateMember struct {
 	MemberID int64 `json:"member_id,string" gorm:"column:user_id" binding:"required"` // 成员id，必填字段
 }
 
+// JoinList 定义主动参与列表的参数结构体
+type JoinList struct {
+	ListID   int64 `json:"list_id,string" gorm:"column:list_id" binding:"required"`
+	MemberID int64 `json:"member_id,string" gorm:"column:member_id"`
+}
+
 // ListDetail 定义列表详情的参数结构体
 type ListDetail struct {
 	MemberID   string `json:"member_id" gorm:"column:user_id"`    // 用户id

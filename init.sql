@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS `way` (
 
 INSERT INTO `way` VALUES ('1', '1', '验证码签到', '2025-04-24 11:17:11', '2025-04-24 11:17:11');
 INSERT INTO `way` VALUES ('2', '2', '二维码签到', '2025-05-21 15:45:00', '2025-05-21 15:45:00');
-INSERT INTO `way` VALUES ('3', '3', '定位签到', '2025-05-21 15:45:00', '2025-05-21 15:45:00');
 
 CREATE TABLE IF NOT EXISTS `member_list` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT,

@@ -62,6 +62,14 @@ func GetListDetail(pid, page, size int64) (data []*models.ListDetail, err error)
 
 // GetJoinURL 获取参与成员列表的id
 func GetJoinURL(checkinID int64) (url string, err error) {
-	url = fmt.Sprintf("http://3.138.230.142:8087/join-list.html/%d", checkinID)
+	url = fmt.Sprintf("http://8.138.230.142:8087/join-list.html?listId=%d", checkinID)
 	return
+}
+
+// GetJoinInfo 检查用户是否加入列表并获取信息
+func GetJoinInfo(listID, userID int64) (data *models.ListDetail, exists bool, err error) {
+	zap.L().Debug("GetJoinInfo",
+		zap.Int64("list_id", listID),
+		zap.Int64("user_id", userID))
+	return mysql.GetJoinInfo(listID, userID)
 }
